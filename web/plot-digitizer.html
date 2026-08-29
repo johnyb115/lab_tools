@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plot Digitizer — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    #pd-canvas-wrap {
+      position: relative;
+      overflow: auto;
+      max-height: 70vh;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-elev);
+    }
+    #pd-canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+    #pd-canvas.mode-idle { cursor: default; }
+    #pd-canvas.mode-active { cursor: crosshair; }
+
+    .pd-hint-list {
+      list-style: none;
+      counter-reset: pd-step;
+      margin: 0 0 0.9rem;
+      padding: 0;
+      font-size: 0.83rem;
+    }
+    .pd-hint-list li {
+      counter-increment: pd-step;
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.2rem 0;
+      color: var(--text-dim);
+    }
+    .pd-hint-list li::before {
+      content: counter(pd-step);
+      flex: none;
+      width: 1.3rem;
+      height: 1.3rem;
+      border-radius: 50%;
+      background: var(--bg-elev-2);
+      border: 1px solid var(--border);
+      font-size: 0.72rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pd-hint-list li.is-current {
+      color: var(--text);
+      font-weight: 700;
+    }
+    .pd-hint-list li.is-current::before {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #04101f;
+    }
+    .pd-hint-list li.is-done {
+      color: var(--accent-2);
+      text-decoration: line-through;
+    }
+
+    .pd-calib-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin: 0.6rem 0;
+      padding: 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-elev-2);
+    }
+    .pd-calib-inputs .field-row label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-bottom: 0.25rem;
+    }
+
+    .pd-series-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem;
+      margin-bottom: 0.7rem;
+    }
+    .pd-series-card__head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .pd-series-swatch {
+      display: inline-block;
+      width: 1.1rem;
+      height: 1.1rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      vertical-align: middle;
+      margin-right: 0.35rem;
+    }
+    .pd-series-row2 {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .pd-series-row2 input[type="range"] { flex: 1; }
+    .pd-series-row2 span { font-size: 0.78rem; color: var(--text-dim); width: 2rem; text-align: right; }
+    .pd-series-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pd-calib-badge { margin-bottom: 0.6rem; }
+    #pd-results { margin-top: 1.25rem; }
+    .pd-chart-labels { display: flex; gap: 0.6rem; margin-bottom: 0.8rem; }
+    .pd-chart-labels .field { flex: 1; margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🖼️ Plot Digitizer</h1>
+      <p>
+        Upload a screenshot or photo of a graph, calibrate the X and Y axes by clicking two
+        known points on each, then sample a curve's color to extract its underlying (x, y)
+        data as CSV. Works for any axis range and any number of curves — everything runs
+        locally in your browser, nothing is uploaded anywhere.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <ol class="pd-hint-list" id="pd-hint-list"></ol>
+
+          <h2>1. Upload image</h2>
+          <div id="pd-dropzone" class="dropzone">
+            <input id="pd-file-input" type="file" accept="image/*" />
+            <div>Drop a graph image here, or click to browse (PNG/JPG).</div>
+          </div>
+          <ul id="pd-file-chip" class="file-chip-list"></ul>
+        </div>
+
+        <div class="panel">
+          <h2>2. Calibrate axes</h2>
+          <p style="font-size: 0.85rem; margin-bottom: 0.6rem;">
+            Click two points with known values on each axis (e.g. two tick marks). The image
+            does not need to start at zero or use any particular scale.
+          </p>
+          <div id="pd-calib-badges" class="pd-calib-badge"></div>
+          <div class="btn-row">
+            <button id="pd-calib-x-btn" class="btn" type="button" disabled>Calibrate X axis</button>
+            <button id="pd-calib-y-btn" class="btn" type="button" disabled>Calibrate Y axis</button>
+          </div>
+          <div id="pd-calib-alert" class="alert alert-info" style="margin-top: 0.7rem;">Upload an image to begin.</div>
+          <div id="pd-calib-x-inputs"></div>
+          <div id="pd-calib-y-inputs"></div>
+          <div class="btn-row" style="margin-top: 0.5rem;">
+            <button id="pd-reset-calib" class="btn btn-danger" type="button">Reset calibration</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>3. Curve series</h2>
+          <div id="pd-series-gate" class="alert alert-info">Calibrate both axes before picking a curve color.</div>
+          <div id="pd-series-list"></div>
+          <p id="pd-series-empty" class="empty-state" style="padding: 1rem;">No curve series yet.</p>
+          <div class="btn-row">
+            <button id="pd-add-series" class="btn btn-primary" type="button" disabled>+ Add series</button>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div id="pd-canvas-wrap">
+          <canvas id="pd-canvas" class="mode-idle"></canvas>
+        </div>
+        <div id="pd-empty-canvas" class="empty-state">Upload an image to get started.</div>
+
+        <div id="pd-results" style="display: none;">
+          <h2>4. Extracted data</h2>
+          <div class="pd-chart-labels">
+            <div class="field">
+              <label for="pd-xlabel">X axis label</label>
+              <input id="pd-xlabel" type="text" value="X" />
+            </div>
+            <div class="field">
+              <label for="pd-ylabel">Y axis label</label>
+              <input id="pd-ylabel" type="text" value="Y" />
+            </div>
+          </div>
+          <div class="plot-area">
+            <div id="digitizer-plot" style="height: 460px;"></div>
+          </div>
+          <div class="panel" style="margin-top: 1rem;">
+            <h2>Export</h2>
+            <button id="pd-download" class="btn btn-primary" type="button">⬇ Download CSV (all series)</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/plotDigitizer.js"></script>
+</body>
+</html>

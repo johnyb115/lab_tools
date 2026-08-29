@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Universal Plotter — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .up-y-list {
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+    .up-y-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .up-y-row label {
+      flex: 1;
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .up-y-row input[type="checkbox"] {
+      accent-color: var(--accent);
+      flex: 0 0 auto;
+    }
+    .up-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .up-panel-head h2 {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .up-btn-small {
+      flex: 0 0 auto;
+      width: auto;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.78rem;
+    }
+    .up-caption {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin: 0.35rem 0 0;
+    }
+    #up-file-status .alert {
+      margin-top: 0.5rem;
+    }
+    #up-file-panels .panel:first-child {
+      margin-top: 1.25rem;
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>📈 Universal Data Plotter</h1>
+      <p>
+        Upload one or more CSV, whitespace-delimited ASCII, or XLSX files, choose an X column
+        and any number of Y columns per file, and combine them into a single chart. Colors,
+        axis labels, log scales and trace style are all adjustable — the plot updates live as
+        you change any control.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Data</h2>
+          <div class="alert alert-info">
+            Supported formats: CSV (comma or semicolon), TSV, whitespace-delimited ASCII
+            (.txt/.asc) and Excel (.xlsx/.xls). The first row of each file is treated as
+            column headers. You can drop multiple files at once.
+          </div>
+          <div class="dropzone" id="up-dropzone">
+            <input type="file" id="up-file-input" accept=".csv,.txt,.asc,.tsv,.xlsx,.xls" multiple />
+            <div>📄 Click or drop CSV / ASCII / XLSX files</div>
+          </div>
+          <div id="up-file-status"></div>
+        </div>
+
+        <div id="up-file-panels"></div>
+
+        <div class="panel" id="up-style-panel" style="display: none">
+          <h2>Chart options</h2>
+
+          <div class="field">
+            <label for="up-title">Chart title</label>
+            <input type="text" id="up-title" placeholder="Chart title" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="up-xlabel">X-axis label</label>
+              <input type="text" id="up-xlabel" placeholder="X" />
+            </div>
+            <div class="field">
+              <label for="up-ylabel">Y-axis label</label>
+              <input type="text" id="up-ylabel" placeholder="Y" />
+            </div>
+          </div>
+
+          <div class="checkbox-row">
+            <input type="checkbox" id="up-logx" />
+            <label for="up-logx" style="margin: 0">Log scale (X)</label>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="up-logy" />
+            <label for="up-logy" style="margin: 0">Log scale (Y)</label>
+          </div>
+
+          <div class="field">
+            <label for="up-trace-style">Trace style</label>
+            <select id="up-trace-style">
+              <option value="lines" selected>Lines</option>
+              <option value="markers">Markers</option>
+              <option value="lines+markers">Lines + Markers</option>
+            </select>
+          </div>
+
+          <hr class="sep" />
+          <button type="button" class="btn btn-primary" id="up-download-btn" disabled>
+            ⬇ Download plotted data (CSV)
+          </button>
+          <p class="up-caption">
+            The plot updates automatically whenever you check/uncheck a series or change an
+            option — there's no separate "apply" step. To save a PNG, use the camera icon in
+            the plot's own toolbar (top-right of the chart).
+          </p>
+        </div>
+      </aside>
+
+      <section>
+        <div id="up-plot" class="plot-area">
+          <div class="empty-state">Upload one or more data files to get started.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/universalPlotter.js"></script>
+</body>
+</html>
