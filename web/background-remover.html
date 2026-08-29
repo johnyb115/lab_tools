@@ -13,6 +13,12 @@
     .status-line:not([hidden]) {
       display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-dim); margin-top: 0.75rem;
     }
+    #result-canvas { cursor: crosshair; touch-action: none; }
+    .brush-btn-row { display: flex; gap: 0.5rem; }
+    .brush-btn { flex: 1; }
+    .brush-btn.is-active {
+      background: var(--accent); border-color: var(--accent); color: #061224;
+    }
   </style>
 </head>
 <body>
@@ -87,6 +93,33 @@
 
           <button class="btn" id="reset-tune-btn" style="margin-top: 0.5rem;">Reset adjustments</button>
         </div>
+
+        <div class="panel" id="paint-panel" hidden>
+          <h2>Manual touch-up</h2>
+          <p style="font-size: 0.82rem; margin-top: -0.4rem;">
+            Paint directly on the result image to erase leftover background or restore part of
+            the subject the model cut off. This overrides the automatic mask wherever you paint.
+          </p>
+
+          <div class="field">
+            <label>Brush mode</label>
+            <div class="brush-btn-row">
+              <button class="btn brush-btn is-active" id="erase-mode-btn" type="button">🧽 Erase</button>
+              <button class="btn brush-btn" id="restore-mode-btn" type="button">🖌️ Restore</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="brush-size-range">Brush size</label>
+            <input type="range" id="brush-size-range" min="4" max="150" value="30" />
+            <div class="range-readout"><span>Fine</span><span id="brush-size-value">30</span><span>Broad</span></div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn" id="undo-paint-btn" disabled>↩ Undo stroke</button>
+            <button class="btn btn-danger" id="clear-paint-btn" disabled>Clear touch-ups</button>
+          </div>
+        </div>
       </aside>
 
       <section>
@@ -98,8 +131,8 @@
             <img id="original-img" alt="Original upload" />
           </figure>
           <figure>
-            <figcaption>Background removed</figcaption>
-            <img id="result-img" alt="Background removed result" />
+            <figcaption>Background removed — paint here to touch up</figcaption>
+            <canvas id="result-canvas"></canvas>
           </figure>
         </div>
 
