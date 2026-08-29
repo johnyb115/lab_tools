@@ -2,86 +2,132 @@ import { initChrome } from '../shared/nav.js'
 import { initDropzone } from '../shared/dropzone.js'
 import { downloadBlob } from '../shared/download.js'
 import { escapeHtml } from '../shared/dom.js'
+import JSZip from 'jszip'
 
 initChrome('auto-crop')
 
 const dropzone = document.getElementById('dropzone')
 const fileInput = document.getElementById('file-input')
 const fileChipList = document.getElementById('file-chip-list')
-const autoBgSwatch = document.getElementById('auto-bg-swatch')
+const clearAllBtn = document.getElementById('clear-all-btn')
+
+const customBgCheckbox = document.getElementById('custom-bg-checkbox')
+const customBgField = document.getElementById('custom-bg-field')
+const autoBgHint = document.getElementById('auto-bg-hint')
 const bgColorInput = document.getElementById('bg-color')
 const toleranceInput = document.getElementById('tolerance')
 const toleranceValue = document.getElementById('tolerance-value')
-const cropBtn = document.getElementById('crop-btn')
-const downloadBtn = document.getElementById('download-btn')
-const warningArea = document.getElementById('warning-area')
-const resultArea = document.getElementById('result-area')
+const paddingInput = document.getElementById('padding')
+const cropAllBtn = document.getElementById('crop-all-btn')
+const downloadZipBtn = document.getElementById('download-zip-btn')
 
-// Pristine, never-mutated state for the currently loaded image. Every crop
-// recomputation starts from this, never from a previously-cropped canvas.
-let pristine = null // { img, width, height, data, objectUrl }
-let currentBaseName = 'image'
-let lastCropCanvas = null // last successfully produced crop, for downloading
+const globalAlerts = document.getElementById('global-alerts')
+const resultsArea = document.getElementById('results-area')
 
-initDropzone(dropzone, fileInput, (files) => handleFile(files[0]))
+// One entry per loaded image: { id, file, name, img, width, height, data,
+// objectUrl, cropCanvas, warning }. `data` is the pristine ImageData.data of
+// the full-resolution image — never mutated; every recompute starts from it.
+let entries = []
+let nextId = 1
+let debounceTimer = null
 
-toleranceInput.addEventListener('input', () => {
-  toleranceValue.textContent = toleranceInput.value
-  recompute()
-})
+initDropzone(dropzone, fileInput, (files) => handleFiles(files))
 
-bgColorInput.addEventListener('input', () => {
-  recompute()
-})
+async function handleFiles(fileList) {
+  const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'))
+  if (files.length === 0) return
 
-cropBtn.addEventListener('click', () => recompute())
-
-downloadBtn.addEventListener('click', () => {
-  if (!lastCropCanvas) return
-  lastCropCanvas.toBlob((blob) => {
-    if (blob) downloadBlob(blob, `cropped_${currentBaseName}.png`)
-  }, 'image/png')
-})
-
-function handleFile(file) {
-  if (!file || !file.type.startsWith('image/')) return
-
-  currentBaseName = file.name.replace(/\.[^.]+$/, '')
-  fileChipList.innerHTML = `<li><span>📄 ${escapeHtml(file.name)}</span><span>${(file.size / 1024).toFixed(1)} KB</span></li>`
-
-  const objectUrl = URL.createObjectURL(file)
-
-  const img = new Image()
-  img.onload = () => {
-    if (pristine && pristine.objectUrl) URL.revokeObjectURL(pristine.objectUrl)
-
-    const width = img.naturalWidth
-    const height = img.naturalHeight
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
-    ctx.drawImage(img, 0, 0)
-    const { data } = ctx.getImageData(0, 0, width, height)
-
-    pristine = { img, width, height, data, objectUrl }
-    lastCropCanvas = null
-
-    const autoRgb = detectBackgroundColor(data, width, height)
-    const autoHex = rgbToHex(autoRgb)
-    autoBgSwatch.style.background = autoHex
-    bgColorInput.value = autoHex
-    bgColorInput.disabled = false
-    toleranceInput.disabled = false
-    cropBtn.disabled = false
-
-    warningArea.innerHTML = ''
-    recompute()
+  const results = await Promise.allSettled(files.map(decodeFile))
+  const failures = []
+  for (const r of results) {
+    if (r.status === 'fulfilled') entries.push(r.value)
+    else failures.push(r.reason?.message || String(r.reason))
   }
-  img.onerror = () => {
-    warningArea.innerHTML = '<div class="alert alert-danger">Could not load this file as an image.</div>'
-  }
-  img.src = objectUrl
+
+  globalAlerts.innerHTML = failures.length
+    ? `<div class="alert alert-danger">${failures.map(escapeHtml).join('<br>')}</div>`
+    : ''
+
+  renderFileChipList()
+  recomputeAll()
+}
+
+function decodeFile(file) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const width = img.naturalWidth
+      const height = img.naturalHeight
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0)
+      const { data } = ctx.getImageData(0, 0, width, height)
+      resolve({
+        id: nextId++,
+        file,
+        name: file.name,
+        img,
+        width,
+        height,
+        data,
+        objectUrl,
+        cropCanvas: null,
+        warning: null,
+      })
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error(`Could not load ${file.name} as an image.`))
+    }
+    img.src = objectUrl
+  })
+}
+
+function renderFileChipList() {
+  clearAllBtn.hidden = entries.length === 0
+  cropAllBtn.disabled = entries.length === 0
+
+  fileChipList.innerHTML = entries
+    .map(
+      (e) => `
+      <li data-id="${e.id}">
+        <span>📄 ${escapeHtml(e.name)}</span>
+        <span>${(e.file.size / 1024).toFixed(1)} KB
+          <button type="button" class="ac-remove-btn" data-id="${e.id}" title="Remove">✕</button>
+        </span>
+      </li>`
+    )
+    .join('')
+
+  fileChipList.querySelectorAll('.ac-remove-btn').forEach((btn) => {
+    btn.addEventListener('click', () => removeEntry(Number(btn.dataset.id)))
+  })
+}
+
+function removeEntry(id) {
+  const entry = entries.find((e) => e.id === id)
+  if (entry?.objectUrl) URL.revokeObjectURL(entry.objectUrl)
+  entries = entries.filter((e) => e.id !== id)
+  renderFileChipList()
+  renderResults()
+}
+
+clearAllBtn.addEventListener('click', () => {
+  entries.forEach((e) => e.objectUrl && URL.revokeObjectURL(e.objectUrl))
+  entries = []
+  renderFileChipList()
+  renderResults()
+})
+
+// ------------------------------------------------------------------
+// Background detection (shared across all files unless a custom color is set)
+// ------------------------------------------------------------------
+function backgroundColorFor(entry) {
+  if (customBgCheckbox.checked) return hexToRgb(bgColorInput.value)
+  return detectBackgroundColor(entry.data, entry.width, entry.height)
 }
 
 // Averages a small (up to 5x5) patch at each corner, rather than a single
@@ -130,11 +176,6 @@ function hexToRgb(hex) {
   return [(num >> 16) & 255, (num >> 8) & 255, num & 255]
 }
 
-function rgbToHex([r, g, b]) {
-  const toHex = (v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
-}
-
 // Euclidean RGB distance against the reference background color, scaled by
 // the tolerance slider. Alpha is ignored for the comparison, except that a
 // near-transparent pixel is always treated as background.
@@ -161,9 +202,7 @@ function colIsBackground(data, width, height, x, bg, maxDist) {
 }
 
 // Scans inward from each of the 4 edges. Returns the first non-background
-// row/column index from each side (top/left default to the "past the end"
-// sentinel, bottom/right to the "before the start" sentinel, when an entire
-// scan direction never finds a non-background row/column).
+// row/column index from each side.
 function computeCropBox(data, width, height, bg, maxDist) {
   let top = 0
   while (top < height && rowIsBackground(data, width, top, bg, maxDist)) top++
@@ -180,61 +219,143 @@ function computeCropBox(data, width, height, bg, maxDist) {
   return { top, bottom, left, right }
 }
 
-function recompute() {
-  if (!pristine) return
-  const { img, width, height, data } = pristine
-
-  const bg = hexToRgb(bgColorInput.value)
+// ------------------------------------------------------------------
+// Recompute (shared tolerance/padding/background settings applied per file)
+// ------------------------------------------------------------------
+function recomputeEntry(entry) {
+  const { img, width, height, data } = entry
+  const bg = backgroundColorFor(entry)
   const tolerance = Number(toleranceInput.value)
   const maxDist = (tolerance / 100) * 255 * Math.sqrt(3)
+  const padding = Math.max(0, parseInt(paddingInput.value, 10) || 0)
 
   const box = computeCropBox(data, width, height, bg, maxDist)
-  const cropWidth = box.right - box.left + 1
-  const cropHeight = box.bottom - box.top + 1
+  const rawCropWidth = box.right - box.left + 1
+  const rawCropHeight = box.bottom - box.top + 1
 
-  if (cropWidth <= 0 || cropHeight <= 0) {
-    warningArea.innerHTML =
-      '<div class="alert alert-warning">Nothing left to crop at this tolerance — try lowering it.</div>'
-    return // leave the previously displayed image untouched
+  if (rawCropWidth <= 0 || rawCropHeight <= 0) {
+    entry.cropCanvas = null
+    entry.warning = 'Nothing left to crop at this tolerance — try lowering it.'
+    return
   }
 
-  const noMarginFound = box.top === 0 && box.left === 0 && box.bottom === height - 1 && box.right === width - 1
+  const noMarginFound =
+    box.top === 0 && box.left === 0 && box.bottom === height - 1 && box.right === width - 1
+  entry.warning = noMarginFound ? 'No uniform margin detected — image left uncropped.' : null
 
-  if (noMarginFound) {
-    warningArea.innerHTML =
-      '<div class="alert alert-info">No uniform margin detected — image left uncropped.</div>'
-  } else {
-    warningArea.innerHTML = ''
-  }
+  const left = clamp(box.left - padding, 0, width - 1)
+  const top = clamp(box.top - padding, 0, height - 1)
+  const right = clamp(box.right + padding, 0, width - 1)
+  const bottom = clamp(box.bottom + padding, 0, height - 1)
+  const cropWidth = right - left + 1
+  const cropHeight = bottom - top + 1
 
   const cropCanvas = document.createElement('canvas')
   cropCanvas.width = cropWidth
   cropCanvas.height = cropHeight
   const cropCtx = cropCanvas.getContext('2d')
-  cropCtx.drawImage(img, box.left, box.top, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
-
-  lastCropCanvas = cropCanvas
-  downloadBtn.disabled = false
-
-  renderCompare(width, height, cropCanvas)
+  cropCtx.drawImage(img, left, top, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
+  entry.cropCanvas = cropCanvas
 }
 
-function renderCompare(origWidth, origHeight, cropCanvas) {
-  resultArea.innerHTML = `
-    <div class="image-compare">
-      <figure>
-        <figcaption>Original</figcaption>
-        <img id="original-preview" alt="Original image" />
-        <p class="dim-caption">${origWidth} × ${origHeight} px</p>
-      </figure>
-      <figure>
-        <figcaption>Cropped preview</figcaption>
-        <div id="cropped-slot"></div>
-        <p class="dim-caption">${cropCanvas.width} × ${cropCanvas.height} px</p>
-      </figure>
-    </div>
-  `
-
-  document.getElementById('original-preview').src = pristine.img.src
-  document.getElementById('cropped-slot').appendChild(cropCanvas)
+function recomputeAll() {
+  entries.forEach(recomputeEntry)
+  renderResults()
 }
+
+function scheduleRecompute() {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(recomputeAll, 200)
+}
+
+// ------------------------------------------------------------------
+// Results UI
+// ------------------------------------------------------------------
+function renderResults() {
+  if (entries.length === 0) {
+    resultsArea.innerHTML = '<div class="empty-state">Upload one or more images to auto-crop their margins.</div>'
+    downloadZipBtn.disabled = true
+    return
+  }
+
+  resultsArea.innerHTML = entries
+    .map(
+      (e) => `
+      <div class="panel ac-result-card" data-entry-id="${e.id}">
+        <h3>${escapeHtml(e.name)}</h3>
+        ${e.warning ? `<div class="alert alert-warning">${escapeHtml(e.warning)}</div>` : ''}
+        <div class="image-compare">
+          <figure>
+            <figcaption>Original</figcaption>
+            <img data-role="original" alt="Original: ${escapeHtml(e.name)}" />
+            <p class="dim-caption">${e.width} × ${e.height} px</p>
+          </figure>
+          <figure>
+            <figcaption>Cropped preview</figcaption>
+            <div data-role="cropped-slot"></div>
+            <p class="dim-caption" data-role="cropped-dims"></p>
+          </figure>
+        </div>
+        <div class="btn-row" style="margin-top: 0.75rem;">
+          <button class="btn" data-action="download" ${e.cropCanvas ? '' : 'disabled'}>⬇ Download PNG</button>
+          <button class="btn btn-danger" data-action="remove" style="flex: 0 0 auto;">Remove</button>
+        </div>
+      </div>`
+    )
+    .join('')
+
+  entries.forEach((e) => {
+    const card = resultsArea.querySelector(`[data-entry-id="${e.id}"]`)
+    if (!card) return
+    card.querySelector('[data-role="original"]').src = e.img.src
+    if (e.cropCanvas) {
+      card.querySelector('[data-role="cropped-slot"]').appendChild(e.cropCanvas)
+      card.querySelector('[data-role="cropped-dims"]').textContent =
+        `${e.cropCanvas.width} × ${e.cropCanvas.height} px`
+    }
+    const dlBtn = card.querySelector('[data-action="download"]')
+    if (dlBtn) {
+      dlBtn.addEventListener('click', () => {
+        e.cropCanvas.toBlob((blob) => {
+          if (blob) downloadBlob(blob, `cropped_${baseName(e.name)}.png`)
+        }, 'image/png')
+      })
+    }
+    card.querySelector('[data-action="remove"]').addEventListener('click', () => removeEntry(e.id))
+  })
+
+  downloadZipBtn.disabled = !entries.some((e) => e.cropCanvas)
+}
+
+function baseName(name) {
+  return name.replace(/\.[^.]+$/, '')
+}
+
+downloadZipBtn.addEventListener('click', async () => {
+  const withCrops = entries.filter((e) => e.cropCanvas)
+  if (withCrops.length === 0) return
+
+  const zip = new JSZip()
+  for (const e of withCrops) {
+    const blob = await new Promise((resolve) => e.cropCanvas.toBlob(resolve, 'image/png'))
+    if (blob) zip.file(`cropped_${baseName(e.name)}.png`, blob)
+  }
+  const zipBlob = await zip.generateAsync({ type: 'blob' })
+  downloadBlob(zipBlob, 'cropped_images.zip')
+})
+
+// ------------------------------------------------------------------
+// Shared controls
+// ------------------------------------------------------------------
+customBgCheckbox.addEventListener('change', () => {
+  customBgField.hidden = !customBgCheckbox.checked
+  autoBgHint.hidden = customBgCheckbox.checked
+  scheduleRecompute()
+})
+bgColorInput.addEventListener('input', scheduleRecompute)
+toleranceInput.addEventListener('input', () => {
+  toleranceValue.textContent = toleranceInput.value
+  scheduleRecompute()
+})
+paddingInput.addEventListener('input', scheduleRecompute)
+cropAllBtn.addEventListener('click', recomputeAll)

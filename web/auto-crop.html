@@ -7,18 +7,21 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/src/style.css" />
   <style>
-    .bg-swatch-row { display: flex; align-items: center; gap: 0.6rem; }
-    .bg-swatch {
-      display: inline-block;
-      width: 2rem;
-      height: 2rem;
-      border-radius: var(--radius-sm, 4px);
-      border: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .bg-swatch-row input[type="color"] { flex-shrink: 0; }
     .bg-swatch-hint { font-size: 0.78rem; color: var(--text-dim); margin: 0.3rem 0 0; }
     .dim-caption { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.35rem; }
+    .ac-remove-btn {
+      flex: 0 0 auto;
+      background: none;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0 0.2rem;
+      margin-left: 0.4rem;
+    }
+    .ac-remove-btn:hover { text-decoration: underline; }
+    .ac-result-card { margin-bottom: 1.25rem; }
+    .ac-result-card h3 { font-size: 1rem; margin-bottom: 0.6rem; word-break: break-all; }
   </style>
 </head>
 <body>
@@ -27,50 +30,69 @@
   <main class="site-main">
     <div class="page-header">
       <h1>✂️ Image Auto-Crop</h1>
-      <p>Automatically trims uniform white-space (or other flat-color) margins around an uploaded image. Everything runs locally in your browser using the Canvas 2D API — nothing is uploaded anywhere.</p>
+      <p>
+        Automatically trims uniform white-space (or other flat-color) margins around one or
+        more uploaded images. Everything runs locally in your browser using the Canvas 2D API
+        — nothing is uploaded anywhere.
+      </p>
     </div>
 
     <div class="layout-sidebar">
       <aside>
         <div class="panel">
-          <h2>Image</h2>
+          <h2>Images</h2>
           <div id="dropzone" class="dropzone">
-            <input id="file-input" type="file" accept="image/*" />
-            <p>📤 Click or drag an image here (PNG, JPG, …)</p>
+            <input id="file-input" type="file" accept="image/*" multiple />
+            <p>📤 Click or drag images here (PNG, JPG, …) — multiple files supported</p>
           </div>
           <ul id="file-chip-list" class="file-chip-list"></ul>
+          <button id="clear-all-btn" class="btn btn-danger" style="margin-top: 0.6rem;" hidden>
+            Clear all
+          </button>
         </div>
 
         <div class="panel">
-          <h2>Background</h2>
-          <div class="field">
-            <label>Auto-detected background (average of the 4 corners)</label>
-            <div class="bg-swatch-row">
-              <span id="auto-bg-swatch" class="bg-swatch" title="Auto-detected background color"></span>
-              <input id="bg-color" type="color" value="#ffffff" disabled />
-            </div>
-            <p class="bg-swatch-hint">Override with the color picker if the auto-detected background is wrong.</p>
+          <h2>Background &amp; tolerance</h2>
+          <label class="checkbox-row">
+            <input type="checkbox" id="custom-bg-checkbox" />
+            Use one color for all images
+          </label>
+          <div class="field" id="custom-bg-field" hidden>
+            <label for="bg-color">Background color</label>
+            <input id="bg-color" type="color" value="#ffffff" />
           </div>
+          <p class="bg-swatch-hint" id="auto-bg-hint">
+            Each image auto-detects its own background from its corners.
+          </p>
+
           <div class="field">
             <label for="tolerance">Tolerance</label>
-            <input id="tolerance" type="range" min="0" max="100" value="10" disabled />
+            <input id="tolerance" type="range" min="0" max="100" value="10" />
             <div class="range-readout">
               <span>0</span>
               <span id="tolerance-value">10</span>
               <span>100</span>
             </div>
           </div>
+
+          <div class="field">
+            <label for="padding">Padding (px)</label>
+            <input id="padding" type="number" min="0" value="0" step="1" />
+          </div>
+
           <div class="btn-row">
-            <button id="crop-btn" class="btn btn-primary" disabled>✂️ Crop</button>
-            <button id="download-btn" class="btn" disabled>⬇ Download PNG</button>
+            <button id="crop-all-btn" class="btn btn-primary" disabled>✂️ Crop All</button>
+          </div>
+          <div class="btn-row" style="margin-top: 0.5rem;">
+            <button id="download-zip-btn" class="btn" disabled>⬇ Download All (ZIP)</button>
           </div>
         </div>
       </aside>
 
       <section>
-        <div id="warning-area"></div>
-        <div id="result-area">
-          <div class="empty-state">Upload an image to auto-crop its margins.</div>
+        <div id="global-alerts"></div>
+        <div id="results-area">
+          <div class="empty-state">Upload one or more images to auto-crop their margins.</div>
         </div>
       </section>
     </div>
