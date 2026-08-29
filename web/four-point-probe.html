@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Four-Point Probe — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .fpp-banner {
+      padding: 18px 22px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #1f6feb22, #2ea04322);
+      border: 1px solid #2ea04355;
+      margin: 1rem 0 1.25rem;
+    }
+    .fpp-banner__title { font-size: 0.95rem; opacity: 0.85; margin-bottom: 6px; }
+    .fpp-banner__value { font-size: 2rem; font-weight: 800; }
+    .fpp-svg-wrap { max-width: 950px; margin: 0 auto 1.25rem; }
+    .fpp-svg-wrap svg { width: 100%; height: auto; }
+    details.panel summary { cursor: pointer; color: var(--text-dim); font-size: 0.9rem; }
+    details.panel[open] summary { margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🧮 Four-Point Probe — Simple Linear Fit</h1>
+      <p>
+        For each uploaded file: fits I = a·V + b (least squares), computes R = 1/a, then
+        Rs = 4.53236 · R. Optionally applies a rectangular-geometry correction (Ossila table).
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Upload</h2>
+          <div class="field">
+            <label>Upload multiple runs for ONE sample</label>
+            <div class="dropzone" id="fpp-dropzone">
+              <p>Drag &amp; drop .asc / .csv / .txt files here, or click to browse</p>
+              <input id="fpp-file-input" type="file" accept=".asc,.csv,.txt" multiple />
+            </div>
+            <ul class="file-chip-list" id="fpp-file-list"></ul>
+          </div>
+
+          <div class="checkbox-row">
+            <input type="checkbox" id="fpp-show-detail" />
+            <label for="fpp-show-detail">Show detailed calculations for each file</label>
+          </div>
+
+          <button class="btn btn-primary" id="fpp-analyze">Analyze</button>
+        </div>
+
+        <div class="panel">
+          <h2>Rectangular geometry (Ossila table)</h2>
+          <div class="field">
+            <label for="fpp-l">Long side l [mm]</label>
+            <input type="number" id="fpp-l" value="10" step="0.5" min="0" />
+          </div>
+          <div class="field">
+            <label for="fpp-w">Short side w [mm]</label>
+            <input type="number" id="fpp-w" value="10" step="0.5" min="0" />
+          </div>
+          <div class="field">
+            <label for="fpp-s">Probe spacing s [mm]</label>
+            <input type="number" id="fpp-s" value="1" step="0.1" min="0.0001" />
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="fpp-apply-geom" checked />
+            <label for="fpp-apply-geom">Apply rectangular correction factor</label>
+          </div>
+          <p style="font-size:0.78rem;">
+            Centered contacts; probes parallel to the long edge. Uses nearest table cell.
+          </p>
+        </div>
+      </aside>
+
+      <section>
+        <div class="panel">
+          <h2>Geometry preview</h2>
+          <div class="fpp-svg-wrap" id="fpp-geometry-svg"></div>
+        </div>
+
+        <div id="fpp-results">
+          <div class="panel">
+            <p class="empty-state">Upload 2+ files and click <strong>Analyze</strong> to see results.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/fourPointProbe.js"></script>
+</body>
+</html>

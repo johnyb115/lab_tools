@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Auto-Crop — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .bg-swatch-row { display: flex; align-items: center; gap: 0.6rem; }
+    .bg-swatch {
+      display: inline-block;
+      width: 2rem;
+      height: 2rem;
+      border-radius: var(--radius-sm, 4px);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .bg-swatch-row input[type="color"] { flex-shrink: 0; }
+    .bg-swatch-hint { font-size: 0.78rem; color: var(--text-dim); margin: 0.3rem 0 0; }
+    .dim-caption { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.35rem; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>✂️ Image Auto-Crop</h1>
+      <p>Automatically trims uniform white-space (or other flat-color) margins around an uploaded image. Everything runs locally in your browser using the Canvas 2D API — nothing is uploaded anywhere.</p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Image</h2>
+          <div id="dropzone" class="dropzone">
+            <input id="file-input" type="file" accept="image/*" />
+            <p>📤 Click or drag an image here (PNG, JPG, …)</p>
+          </div>
+          <ul id="file-chip-list" class="file-chip-list"></ul>
+        </div>
+
+        <div class="panel">
+          <h2>Background</h2>
+          <div class="field">
+            <label>Auto-detected background (average of the 4 corners)</label>
+            <div class="bg-swatch-row">
+              <span id="auto-bg-swatch" class="bg-swatch" title="Auto-detected background color"></span>
+              <input id="bg-color" type="color" value="#ffffff" disabled />
+            </div>
+            <p class="bg-swatch-hint">Override with the color picker if the auto-detected background is wrong.</p>
+          </div>
+          <div class="field">
+            <label for="tolerance">Tolerance</label>
+            <input id="tolerance" type="range" min="0" max="100" value="10" disabled />
+            <div class="range-readout">
+              <span>0</span>
+              <span id="tolerance-value">10</span>
+              <span>100</span>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="crop-btn" class="btn btn-primary" disabled>✂️ Crop</button>
+            <button id="download-btn" class="btn" disabled>⬇ Download PNG</button>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div id="warning-area"></div>
+        <div id="result-area">
+          <div class="empty-state">Upload an image to auto-crop its margins.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/autoCrop.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🧪 Lab Tools</h1>
+      <p>
+        A single home for the small research utilities the group used to run as separate
+        Streamlit apps. Everything below runs entirely in your browser — files you upload
+        are never sent anywhere.
+      </p>
+    </div>
+
+    <div class="card-grid">
+      <a class="tool-card" href="./voltammetry.html">
+        <span class="tool-card__icon">⚡</span>
+        <div class="tool-card__title">Voltammetry (CV/DPV) Plotter</div>
+        <p class="tool-card__desc">
+          Upload Autolab/NOVA CV or DPV exports, pick a scan range, and get an interactive
+          combined plot. Batch-export processed CSVs as a ZIP.
+        </p>
+        <span class="tool-card__badge">CSV / TXT</span>
+      </a>
+
+      <a class="tool-card" href="./universal-plotter.html">
+        <span class="tool-card__icon">📈</span>
+        <div class="tool-card__title">Universal Data Plotter</div>
+        <p class="tool-card__desc">
+          Load any CSV, ASCII or XLSX table, choose X/Y columns, toggle individual traces on
+          and off, and customize axes, colors and scales.
+        </p>
+        <span class="tool-card__badge">CSV / ASCII / XLSX</span>
+      </a>
+
+      <a class="tool-card" href="./plot-digitizer.html">
+        <span class="tool-card__icon">🖼️</span>
+        <div class="tool-card__title">Plot Digitizer</div>
+        <p class="tool-card__desc">
+          Turn a graph screenshot back into numbers. Calibrate the axes, click on a curve's
+          color, and extract its data points to CSV.
+        </p>
+        <span class="tool-card__badge">PNG / JPG</span>
+      </a>
+
+      <a class="tool-card" href="./four-point-probe.html">
+        <span class="tool-card__icon">🧮</span>
+        <div class="tool-card__title">Four-Point Probe</div>
+        <p class="tool-card__desc">
+          Fit I–V sweeps, compute sheet resistance, and apply the Ossila rectangular-geometry
+          correction. Batch multiple runs of one sample.
+        </p>
+        <span class="tool-card__badge">ASC / CSV / TXT</span>
+      </a>
+
+      <a class="tool-card" href="./linspace.html">
+        <span class="tool-card__icon">🔢</span>
+        <div class="tool-card__title">Linspace Generator</div>
+        <p class="tool-card__desc">
+          Generate evenly spaced numbers between a min and max and download them as CSV.
+        </p>
+        <span class="tool-card__badge">Utility</span>
+      </a>
+
+      <a class="tool-card" href="./auto-crop.html">
+        <span class="tool-card__icon">✂️</span>
+        <div class="tool-card__title">Image Auto-Crop</div>
+        <p class="tool-card__desc">
+          Automatically trim uniform white-space margins around an uploaded image.
+        </p>
+        <span class="tool-card__badge">PNG / JPG</span>
+      </a>
+
+      <a class="tool-card" href="./background-remover.html">
+        <span class="tool-card__icon">🪄</span>
+        <div class="tool-card__title">Background Remover</div>
+        <p class="tool-card__desc">
+          Cut the background out of a photo entirely in-browser and download a transparent PNG.
+        </p>
+        <span class="tool-card__badge">PNG / JPG</span>
+      </a>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/home.js"></script>
+</body>
+</html>

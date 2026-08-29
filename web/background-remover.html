@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Background Remover — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .status-line { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-dim); margin-top: 0.75rem; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🪄 Background Remover</h1>
+      <p>
+        Cuts the background out of a photo entirely in your browser using a small AI
+        segmentation model, and gives you back a transparent PNG. Nothing is uploaded to
+        a server. The first run downloads the model (roughly 5–15s depending on your
+        connection); it's cached after that, so repeat visits are fast.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Upload</h2>
+          <div class="dropzone" id="dropzone">
+            <p>Drop an image here, or click to browse</p>
+            <input type="file" id="file-input" accept="image/*" />
+          </div>
+
+          <div id="alert-slot"></div>
+
+          <button class="btn btn-primary" id="remove-btn" style="margin-top: 1rem;" disabled>
+            Remove Background
+          </button>
+
+          <div class="status-line" id="status-line" hidden>
+            <span class="spinner"></span>
+            <span id="status-text">Working…</span>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div id="empty-state" class="empty-state">Upload a photo to remove its background.</div>
+
+        <div class="image-compare" id="compare" hidden>
+          <figure>
+            <figcaption>Original</figcaption>
+            <img id="original-img" alt="Original upload" />
+          </figure>
+          <figure>
+            <figcaption>Background removed</figcaption>
+            <img id="result-img" alt="Background removed result" />
+          </figure>
+        </div>
+
+        <div id="download-slot" style="margin-top: 1rem;"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/backgroundRemover.js"></script>
+</body>
+</html>

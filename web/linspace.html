@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linspace Generator — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🔢 Linspace Number Generator</h1>
+      <p>Generate evenly spaced numbers and download them as CSV.</p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Parameters</h2>
+          <div class="field">
+            <label for="min-val">Minimum</label>
+            <input type="number" id="min-val" value="-30" step="any" />
+          </div>
+          <div class="field">
+            <label for="max-val">Maximum</label>
+            <input type="number" id="max-val" value="30" step="any" />
+          </div>
+          <div class="field">
+            <label for="count-val">Count (N)</label>
+            <input type="number" id="count-val" value="402" min="2" max="1000000" step="1" />
+          </div>
+          <div id="validation-msg"></div>
+          <div class="field">
+            <button class="btn btn-primary" id="generate-btn">Generate</button>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div id="results-area">
+          <div class="empty-state">Set parameters and click Generate.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/linspace.js"></script>
+</body>
+</html>
