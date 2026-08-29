@@ -53,9 +53,15 @@ actually click "Remove Background" on that one page.
 Any static host works since this is plain `dist/` output. A few options that
 match the group's previous free-tier Streamlit Cloud setup:
 
-- **GitHub Pages** — enable Pages on this repo (or a dedicated one), pointed
-  at the `dist/` output of a build (e.g. via a small GitHub Actions workflow
-  that runs `npm ci && npm run build` in `web/` and publishes `web/dist`).
+- **GitHub Pages** (already wired up) — `.github/workflows/deploy-pages.yml`
+  builds `web/` and publishes `web/dist` to Pages on every push to `main`
+  that touches `web/**`. One-time manual step required: in the repo's
+  **Settings → Pages**, set **Source** to **GitHub Actions** (Pages is off by
+  default even with the workflow file present). After that, pushing to
+  `main` deploys automatically — no build step to run or files to copy by
+  hand. `vite.config.js` uses `base: './'`, so it works whether Pages serves
+  this at the domain root or a project sub-path
+  (`https://<user>.github.io/lab_tools/`).
 - **Netlify / Vercel** — point either at this repo with build command
   `npm run build` (working directory `web/`) and publish directory
   `web/dist`; both have generous free tiers and auto-deploy on every push.
@@ -72,11 +78,3 @@ web/
   vite.config.js                      multi-page build config (base: './')
 ```
 
-## Known dev-only advisories
-
-`npm audit` flags two Vite/esbuild advisories in the dev server (path
-traversal / NTLM hash disclosure in `vite`'s local dev server on Windows,
-and a dev-server CORS issue in `esbuild`). Both only affect `npm run dev`
-exposed to an untrusted network — they do not apply to the static `dist/`
-output this site ships. No fix is available within the current Vite 5.x line
-without a breaking major-version upgrade.
