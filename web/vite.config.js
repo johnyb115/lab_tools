@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 
-const page = (name) => resolve(__dirname, name)
+const page = (name) => resolve(import.meta.dirname, name)
 
 export default defineConfig({
   base: './',
