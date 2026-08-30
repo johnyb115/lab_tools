@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Image Extractor — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .pie-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.9rem;
+      margin-top: 0.6rem;
+    }
+    .pie-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-elev-2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .pie-card img {
+      width: 100%;
+      max-height: 160px;
+      object-fit: contain;
+      background: repeating-conic-gradient(#20262f 0% 25%, #171b22 0% 50%) 50% / 16px 16px;
+      display: block;
+    }
+    .pie-card__meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.45rem 0.55rem;
+    }
+    .pie-card .pie-dl { font-size: 0.78rem; padding: 0.25rem 0.55rem; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>📤 PDF Image Extractor</h1>
+      <p>
+        Pulls the raster images embedded in a PDF back out at their native pixel resolution.
+        Everything runs locally in your browser via <code>pdf.js</code> — the PDF is never
+        uploaded anywhere. Note: each image is re-encoded as a lossless PNG from its decoded
+        pixels, so you get full resolution back, but not necessarily the exact original file
+        bytes (e.g. a source JPEG comes back as a pixel-identical-looking PNG, not the same
+        JPEG file).
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>PDF</h2>
+          <div id="pie-dropzone" class="dropzone">
+            <input id="pie-file-input" type="file" accept="application/pdf,.pdf" />
+            <p>📤 Click or drag a PDF here</p>
+          </div>
+          <div id="pie-status" style="margin-top: 0.6rem;"></div>
+          <div class="btn-row" style="margin-top: 0.6rem;">
+            <button id="pie-download-all" class="btn btn-primary" disabled>⬇ Download All (ZIP)</button>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div id="pie-results">
+          <div class="empty-state">Upload a PDF to extract its embedded images.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/pdfImageExtractor.js"></script>
+</body>
+</html>

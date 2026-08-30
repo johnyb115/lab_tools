@@ -11,7 +11,9 @@
   "dependencies": {
     "@imgly/background-removal": "^1.5.9",
     "jszip": "^3.10.1",
+    "mammoth": "^1.8.0",
     "papaparse": "^5.4.1",
+    "pdfjs-dist": "^4.7.76",
     "plotly.js-dist-min": "^2.34.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },

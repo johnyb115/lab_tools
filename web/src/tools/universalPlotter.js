@@ -263,8 +263,11 @@ function updatePlot() {
   }
   downloadBtn.disabled = false
 
-  // Plotly.react needs a real element (not innerHTML-replaced empty-state div)
-  if (!plotContainer.querySelector('.js-plotly-plot')) {
+  // Plotly.react needs a real element (not innerHTML-replaced empty-state div).
+  // Plotly tags the container itself (not a descendant) with this class, so a
+  // querySelector here always misses and would wipe the DOM out from under
+  // Plotly's own in-flight re-render on every call — check classList instead.
+  if (!plotContainer.classList.contains('js-plotly-plot')) {
     plotContainer.innerHTML = ''
   }
 

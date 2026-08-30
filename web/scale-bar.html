@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scale Bar Calibration — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    #sb-canvas-wrap {
+      position: relative;
+      overflow: auto;
+      max-height: 70vh;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-elev);
+    }
+    #sb-canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+    #sb-canvas.mode-idle { cursor: default; }
+    #sb-canvas.mode-active { cursor: crosshair; }
+
+    #sb-output-canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-elev);
+    }
+
+    .sb-distance-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin: 0.6rem 0;
+      padding: 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-elev-2);
+    }
+    .sb-distance-form .field-row label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-bottom: 0.25rem;
+    }
+
+    .sb-corner-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem;
+      margin: 0.4rem 0 0.8rem;
+    }
+    .sb-corner-grid button {
+      padding: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .sb-corner-grid button.is-active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .sb-calib-badge { margin-bottom: 0.6rem; }
+    #sb-style-panel[hidden], #sb-output-wrap[hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>📏 Scale Bar Calibration</h1>
+      <p>
+        Upload a micrograph or photo, click two points a known distance apart, and burn a
+        calibrated scale bar into a full-resolution copy of the image. Everything runs locally
+        in your browser — nothing is uploaded anywhere.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>1. Upload image</h2>
+          <div id="sb-dropzone" class="dropzone">
+            <input id="sb-file-input" type="file" accept="image/*" />
+            <div>Drop an image here, or click to browse (PNG/JPG).</div>
+          </div>
+          <ul id="sb-file-chip" class="file-chip-list"></ul>
+        </div>
+
+        <div class="panel">
+          <h2>2. Calibrate distance</h2>
+          <p style="font-size: 0.85rem; margin-bottom: 0.6rem;">
+            Click two points on the image a known real-world distance apart (e.g. a ruler in
+            the shot, or a feature of known size).
+          </p>
+          <div id="sb-calib-badges" class="sb-calib-badge"></div>
+          <div class="btn-row">
+            <button id="sb-calibrate-btn" class="btn" type="button" disabled>Calibrate distance</button>
+            <button id="sb-reset-calib-btn" class="btn btn-danger" type="button">Reset</button>
+          </div>
+          <div id="sb-calib-alert" class="alert alert-info" style="margin-top: 0.7rem;">
+            Upload an image to begin.
+          </div>
+          <div id="sb-distance-form"></div>
+        </div>
+
+        <div class="panel" id="sb-style-panel" hidden>
+          <h2>3. Scale bar style</h2>
+
+          <div class="field-row">
+            <div class="field" style="flex: 1;">
+              <label for="sb-bar-length">Bar length</label>
+              <input id="sb-bar-length" type="number" min="0" step="any" />
+            </div>
+            <div class="field" style="flex: 0 0 4rem;">
+              <label>Unit</label>
+              <div id="sb-bar-unit-readout" style="padding: 0.5rem 0; color: var(--text-dim);"></div>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-bottom: 0.8rem;">
+            <button id="sb-suggest-length-btn" class="btn" type="button">Use suggested length</button>
+          </div>
+
+          <label>Corner</label>
+          <div class="sb-corner-grid">
+            <button type="button" class="btn" data-corner="top-left">↖ Top-left</button>
+            <button type="button" class="btn" data-corner="top-right">↗ Top-right</button>
+            <button type="button" class="btn" data-corner="bottom-left">↙ Bottom-left</button>
+            <button type="button" class="btn" data-corner="bottom-right">↘ Bottom-right</button>
+          </div>
+
+          <div class="field">
+            <label for="sb-bar-color">Bar &amp; label color</label>
+            <input id="sb-bar-color" type="color" value="#ffffff" />
+          </div>
+
+          <div class="field">
+            <label for="sb-bar-thickness">Bar thickness (px, original image)</label>
+            <input id="sb-bar-thickness" type="range" min="1" value="10" />
+            <div class="range-readout">
+              <span>thin</span>
+              <span id="sb-bar-thickness-value">10</span>
+              <span>thick</span>
+            </div>
+          </div>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="sb-show-label" checked />
+            Show distance label
+          </label>
+        </div>
+      </aside>
+
+      <section>
+        <div id="sb-canvas-wrap">
+          <canvas id="sb-canvas" class="mode-idle"></canvas>
+        </div>
+        <div id="sb-empty-canvas" class="empty-state">Upload an image to get started.</div>
+
+        <div id="sb-output-wrap" hidden>
+          <h2 style="margin-top: 1.25rem;">Preview (full resolution)</h2>
+          <canvas id="sb-output-canvas"></canvas>
+          <div class="btn-row" style="margin-top: 0.8rem;">
+            <button id="sb-download-btn" class="btn btn-primary" type="button">⬇ Download PNG</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/scaleBar.js"></script>
+</body>
+</html>
