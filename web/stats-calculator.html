@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Uncertainty &amp; Stats — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .sc-mode-row { margin-bottom: 1rem; }
+    .sc-mode-row .btn { margin-right: 0.5rem; }
+    .sc-dataset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .sc-dataset-grid.sc-single-col { grid-template-columns: 1fr; max-width: 480px; }
+    @media (max-width: 720px) {
+      .sc-dataset-grid { grid-template-columns: 1fr; }
+    }
+    .sc-dataset textarea {
+      width: 100%;
+      min-height: 120px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem;
+      resize: vertical;
+    }
+    .sc-hint { font-size: 0.78rem; color: var(--text-dim); margin: 0.3rem 0 0.7rem; }
+    .sc-or-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      margin: 0.7rem 0;
+    }
+    .sc-or-divider::before, .sc-or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .sc-dataset .dropzone { padding: 0.75rem; font-size: 0.85rem; }
+    .sc-n-badge { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.4rem; }
+    .sc-banner {
+      padding: 18px 22px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #1f6feb22, #2ea04322);
+      border: 1px solid #2ea04355;
+      margin: 1rem 0 1.25rem;
+    }
+    .sc-banner.sc-banner--not-significant {
+      background: linear-gradient(135deg, #9aa4b222, #9aa4b211);
+      border: 1px solid #9aa4b255;
+    }
+    .sc-banner__title { font-size: 0.95rem; opacity: 0.85; margin-bottom: 6px; }
+    .sc-banner__value { font-size: 1.7rem; font-weight: 800; }
+    .sc-banner__sub { font-size: 0.85rem; color: var(--text-dim); margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🎯 Uncertainty &amp; Stats</h1>
+      <p>
+        Paste or upload numbers to get descriptive statistics and a confidence interval, or
+        compare two independent samples with Welch's t-test. Everything is computed locally in
+        your browser.
+      </p>
+    </div>
+
+    <div class="sc-mode-row">
+      <button type="button" class="btn btn-primary" id="sc-mode-single">Single dataset</button>
+      <button type="button" class="btn" id="sc-mode-compare">Compare two datasets (t-test)</button>
+    </div>
+
+    <div class="panel">
+      <h2 id="sc-level-label">Confidence level</h2>
+      <div class="field" style="max-width: 220px;">
+        <select id="sc-ci-select">
+          <option value="0.10">90%</option>
+          <option value="0.05" selected>95%</option>
+          <option value="0.01">99%</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sc-dataset-grid" id="sc-dataset-grid">
+      <div class="panel sc-dataset" id="sc-panel-a">
+        <h2 id="sc-title-a">Dataset</h2>
+        <textarea id="sc-textarea-a" placeholder="e.g. 12.3, 12.7, 11.9, 12.5 — one number per line, or separated by commas/spaces"></textarea>
+        <div class="sc-hint">Numbers separated by newlines, commas, semicolons or spaces.</div>
+
+        <div class="sc-or-divider">or upload a file</div>
+        <div id="sc-dropzone-a" class="dropzone">
+          <input id="sc-file-input-a" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" />
+          <p>📤 Click or drag a CSV / XLSX file here</p>
+        </div>
+        <div class="field" id="sc-column-field-a" hidden>
+          <label for="sc-column-select-a">Column</label>
+          <select id="sc-column-select-a"></select>
+        </div>
+        <div id="sc-status-a"></div>
+        <div class="sc-n-badge" id="sc-n-badge-a"></div>
+      </div>
+
+      <div class="panel sc-dataset" id="sc-panel-b" hidden>
+        <h2 id="sc-title-b">Group B</h2>
+        <textarea id="sc-textarea-b" placeholder="e.g. 10.1, 9.8, 10.4, 9.9"></textarea>
+        <div class="sc-hint">Numbers separated by newlines, commas, semicolons or spaces.</div>
+
+        <div class="sc-or-divider">or upload a file</div>
+        <div id="sc-dropzone-b" class="dropzone">
+          <input id="sc-file-input-b" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" />
+          <p>📤 Click or drag a CSV / XLSX file here</p>
+        </div>
+        <div class="field" id="sc-column-field-b" hidden>
+          <label for="sc-column-select-b">Column</label>
+          <select id="sc-column-select-b"></select>
+        </div>
+        <div id="sc-status-b"></div>
+        <div class="sc-n-badge" id="sc-n-badge-b"></div>
+      </div>
+    </div>
+
+    <div id="sc-results">
+      <div class="empty-state">Paste or upload at least 2 numbers to see statistics.</div>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/statsCalculator.js"></script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Peak Integrator — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .pi-file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+    .pi-file-item.is-active {
+      border-color: var(--accent);
+      background: var(--bg-elev-2);
+    }
+    .pi-file-item span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .pi-remove-btn {
+      flex: 0 0 auto;
+      background: none;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0 0.2rem;
+    }
+    .pi-remove-btn:hover { text-decoration: underline; }
+    .pi-caption {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin: 0.35rem 0 0;
+    }
+    .pi-banner {
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1f6feb22, #f2c94c22);
+      border: 1px solid #f2c94c55;
+      margin: 1rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .pi-banner__item .pi-banner__label { font-size: 0.8rem; color: var(--text-dim); }
+    .pi-banner__item .pi-banner__value { font-size: 1.3rem; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>⛰️ Peak Integrator</h1>
+      <p>
+        Load one or more XY curves (e.g. CV/DPV voltammetry peaks or chromatography traces),
+        click two points on the plot to define a straight baseline, and get the peak height
+        and the integrated area between the curve and that baseline.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Data</h2>
+          <div class="dropzone" id="pi-dropzone">
+            <input type="file" id="pi-file-input" accept=".csv,.txt,.asc,.tsv,.xlsx,.xls" multiple />
+            <div>📄 Click or drop CSV / ASCII / XLSX files</div>
+          </div>
+          <ul class="file-chip-list" id="pi-file-list"></ul>
+          <p class="pi-caption">Click a file in the list to make it active.</p>
+        </div>
+
+        <div class="panel" id="pi-column-panel" style="display: none">
+          <h2>Active curve</h2>
+          <div class="field">
+            <label for="pi-x-select">X column</label>
+            <select id="pi-x-select"></select>
+          </div>
+          <div class="field">
+            <label for="pi-y-select">Y column</label>
+            <select id="pi-y-select"></select>
+          </div>
+
+          <div class="field">
+            <button type="button" class="btn btn-primary" id="pi-pick-baseline-btn">
+              Pick baseline (click 2 points)
+            </button>
+          </div>
+          <div class="field">
+            <button type="button" class="btn" id="pi-reset-baseline-btn">Reset baseline</button>
+          </div>
+          <div id="pi-baseline-status"></div>
+        </div>
+      </aside>
+
+      <section>
+        <div id="pi-plot" class="plot-area">
+          <div class="empty-state">Upload one or more data files to get started.</div>
+        </div>
+
+        <div id="pi-result-banner"></div>
+
+        <div class="panel">
+          <div class="pi-panel-head" style="display:flex; align-items:center; justify-content:space-between;">
+            <h2>Results</h2>
+            <button type="button" class="btn" id="pi-download-btn" disabled>⬇ Download CSV</button>
+          </div>
+          <div id="pi-results-table">
+            <p class="empty-state">Process at least one file to see results here.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/peakIntegrator.js"></script>
+</body>
+</html>

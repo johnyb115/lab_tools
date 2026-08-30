@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Table Format Converter — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .tc-panel-head {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.85rem;
+    }
+    .tc-panel-head h3 {
+      margin: 0;
+      font-size: 1rem;
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--text);
+      word-break: break-all;
+      flex: 1;
+    }
+    .tc-remove-btn {
+      flex: 0 0 auto;
+      background: none;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0 0.2rem;
+    }
+    .tc-remove-btn:hover { text-decoration: underline; }
+    .tc-more { font-size: 0.78rem; color: var(--text-dim); margin: 0.5rem 0 0; }
+    .tc-panel { margin-bottom: 1.25rem; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🔁 Table Format Converter</h1>
+      <p>
+        Convert CSV, TSV, XLSX and JSON tables into one another. Upload one or more files,
+        preview them, pick an output format, and download — everything runs locally in your
+        browser.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Files</h2>
+          <div id="dropzone" class="dropzone">
+            <input id="file-input" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,.json" multiple />
+            <p>📤 Click or drag files here — CSV, TSV, XLSX or JSON, multiple supported</p>
+          </div>
+          <button id="clear-all-btn" class="btn btn-danger" style="margin-top: 0.6rem;" hidden>
+            Clear all
+          </button>
+        </div>
+
+        <div class="panel">
+          <h2>Output format</h2>
+          <div class="field">
+            <label for="format-select">Convert to</label>
+            <select id="format-select">
+              <option value="csv">CSV</option>
+              <option value="tsv">TSV</option>
+              <option value="xlsx">XLSX</option>
+              <option value="json">JSON</option>
+            </select>
+          </div>
+          <div class="btn-row">
+            <button id="convert-btn" class="btn btn-primary" disabled>⬇ Convert &amp; Download</button>
+          </div>
+          <p class="tc-more" style="margin-top: 0.6rem;">
+            One file downloads directly; multiple files are bundled into a ZIP.
+          </p>
+        </div>
+      </aside>
+
+      <section>
+        <div id="results-area">
+          <div class="empty-state">Upload one or more CSV, TSV, XLSX or JSON files to preview and convert them.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/tableConverter.js"></script>
+</body>
+</html>

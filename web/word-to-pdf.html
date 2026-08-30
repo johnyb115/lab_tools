@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word → High-Quality PDF — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .wtp-note {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      background: var(--bg-elev-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 0.9rem;
+      margin: 0 0 1rem;
+    }
+    .wtp-note strong { color: var(--text); }
+
+    .wtp-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .wtp-filename {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    /* The preview represents an actual printed page, so it intentionally
+       breaks from the site's dark theme — everything around it stays dark. */
+    .wtp-page-wrap {
+      background: #3a3f4a;
+      border-radius: var(--radius);
+      padding: 2rem;
+      overflow: auto;
+    }
+    .wtp-page {
+      background: #ffffff;
+      color: #1a1a1a;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2.5cm 2cm;
+      font-family: Georgia, 'Times New Roman', serif;
+      line-height: 1.5;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+    }
+    .wtp-page img { max-width: 100%; height: auto; }
+    .wtp-page table { border-collapse: collapse; margin: 1em 0; }
+    .wtp-page table td, .wtp-page table th { border: 1px solid #999; padding: 0.3em 0.6em; }
+    .wtp-page h1, .wtp-page h2, .wtp-page h3 { font-family: Georgia, 'Times New Roman', serif; }
+
+    @media print {
+      .site-header, .site-footer, .layout-sidebar > aside, #wtp-alerts, .wtp-toolbar,
+      #wtp-empty {
+        display: none !important;
+      }
+      .layout-sidebar { display: block !important; }
+      .wtp-page-wrap { background: none !important; padding: 0 !important; }
+      .wtp-page {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+      @page { margin: 2cm; }
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>📝 Word → High-Quality PDF</h1>
+      <p>
+        Convert a .docx to PDF without Word's own "Save as PDF" recompressing your figures.
+        Everything runs locally in your browser — the file never leaves your machine.
+      </p>
+    </div>
+
+    <div class="wtp-note">
+      <strong>Why this helps:</strong> Word's PDF exporter downsamples embedded images to a
+      fixed print resolution on the way out, even if the originals are much sharper. This tool
+      instead reads the original image bytes straight out of the .docx and hands them to your
+      browser's own print engine, which does not recompress them — so the PDF you save keeps
+      the original image quality. It's optimized for text + image fidelity, not exact Word
+      layout: complex tables, headers/footers and exact page breaks may not match Word
+      pixel-for-pixel.
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Document</h2>
+          <div id="wtp-dropzone" class="dropzone">
+            <input id="wtp-file-input" type="file" accept=".docx" />
+            <p>📤 Click or drag a .docx file here</p>
+          </div>
+          <p class="wtp-filename" id="wtp-filename"></p>
+        </div>
+      </aside>
+
+      <section>
+        <div id="wtp-alerts"></div>
+
+        <div id="wtp-empty" class="empty-state">Upload a .docx file to convert it.</div>
+
+        <div id="wtp-result" style="display: none;">
+          <div class="wtp-toolbar">
+            <button class="btn btn-primary" id="wtp-print-btn">🖨️ Print / Save as PDF</button>
+            <span class="wtp-filename">In the print dialog, choose "Save as PDF" as the destination.</span>
+          </div>
+          <div class="wtp-page-wrap">
+            <div class="wtp-page" id="wtp-page"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/wordToPdf.js"></script>
+</body>
+</html>

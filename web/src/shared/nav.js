@@ -12,6 +12,13 @@ export const NAV_ITEMS = [
   { id: 'linspace', label: 'Linspace Generator', href: './linspace.html', icon: '🔢' },
   { id: 'auto-crop', label: 'Image Auto-Crop', href: './auto-crop.html', icon: '✂️' },
   { id: 'background-remover', label: 'Background Remover', href: './background-remover.html', icon: '🪄' },
+  { id: 'eis-plotter', label: 'EIS Plotter', href: './eis-plotter.html', icon: '🌀' },
+  { id: 'peak-integrator', label: 'Peak Integrator', href: './peak-integrator.html', icon: '⛰️' },
+  { id: 'scale-bar', label: 'Scale Bar Calibration', href: './scale-bar.html', icon: '📏' },
+  { id: 'stats-calculator', label: 'Uncertainty & Stats', href: './stats-calculator.html', icon: '🎯' },
+  { id: 'table-converter', label: 'Table Format Converter', href: './table-converter.html', icon: '🔁' },
+  { id: 'word-to-pdf', label: 'Word → High-Quality PDF', href: './word-to-pdf.html', icon: '📝' },
+  { id: 'pdf-image-extractor', label: 'PDF Image Extractor', href: './pdf-image-extractor.html', icon: '📤' },
 ]
 
 export function initChrome(activeId) {

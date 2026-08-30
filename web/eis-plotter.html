@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EIS Plotter — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .eis-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .eis-panel-head h2 {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 1rem;
+    }
+    .eis-btn-small {
+      flex: 0 0 auto;
+      width: auto;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.78rem;
+    }
+    .eis-swatch {
+      display: inline-block;
+      width: 0.7rem;
+      height: 0.7rem;
+      border-radius: 50%;
+      margin-right: 0.4rem;
+      vertical-align: middle;
+    }
+    #eis-file-status .alert {
+      margin-top: 0.5rem;
+    }
+    #eis-file-panels .panel:first-child {
+      margin-top: 1.25rem;
+    }
+    .eis-plots {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .eis-caption {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin: 0.35rem 0 0;
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🌀 EIS Plotter</h1>
+      <p>
+        Upload one or more electrochemical impedance spectroscopy exports and get a Nyquist
+        plot and a Bode plot (|Z| and phase vs. frequency), overlaid across every loaded run.
+        Everything runs locally in your browser.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Data</h2>
+          <div class="alert alert-info">
+            Supported formats: CSV, semicolon-CSV, TSV, whitespace-delimited ASCII (.txt/.asc)
+            and Excel (.xlsx/.xls). The first row of each file is treated as column headers.
+            You can drop multiple files at once to overlay several runs.
+          </div>
+          <div class="dropzone" id="eis-dropzone">
+            <input type="file" id="eis-file-input" accept=".csv,.txt,.asc,.tsv,.xlsx,.xls" multiple />
+            <div>📄 Click or drop CSV / ASCII / XLSX files</div>
+          </div>
+          <div id="eis-file-status"></div>
+        </div>
+
+        <div id="eis-file-panels"></div>
+
+        <div class="panel" id="eis-export-panel" style="display: none">
+          <h2>Export</h2>
+          <button type="button" class="btn btn-primary" id="eis-download-btn" disabled>
+            ⬇ Download normalized data (CSV)
+          </button>
+          <p class="eis-caption">
+            Exports frequency, Z′, Z″, |Z| and phase for every mapped file, long-form with a
+            file column. To save a chart image, use the camera icon in its own toolbar.
+          </p>
+        </div>
+      </aside>
+
+      <section>
+        <div class="eis-plots">
+          <div>
+            <h2 style="margin-bottom: 0.5rem;">Nyquist plot</h2>
+            <div id="eis-nyquist-plot" class="plot-area">
+              <div class="empty-state">Upload one or more EIS data files to get started.</div>
+            </div>
+          </div>
+          <div>
+            <h2 style="margin-bottom: 0.5rem;">Bode plot</h2>
+            <div id="eis-bode-plot" class="plot-area">
+              <div class="empty-state">Upload one or more EIS data files to get started.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/eisPlotter.js"></script>
+</body>
+</html>

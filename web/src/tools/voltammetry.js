@@ -251,7 +251,10 @@ processBtn.addEventListener('click', () => {
     return
   }
 
-  if (!plotContainer.querySelector('.js-plotly-plot')) plotContainer.innerHTML = ''
+  // Plotly tags the container itself (not a descendant) with this class, so a
+  // querySelector here always misses and would wipe the DOM out from under
+  // Plotly's own in-flight re-render on every call — check classList instead.
+  if (!plotContainer.classList.contains('js-plotly-plot')) plotContainer.innerHTML = ''
 
   renderPlot(
     plotContainer,

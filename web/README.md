@@ -17,6 +17,13 @@ leaves the machine it was opened on.
 | Linspace Generator | `linspace.html` | Ports `lab_app/pages/01_Linspace_Generator.py` |
 | Image Auto-Crop | `auto-crop.html` | Trims uniform background margins around an image |
 | Background Remover | `background-remover.html` | In-browser background removal via `@imgly/background-removal` (WASM) |
+| Word → High-Quality PDF | `word-to-pdf.html` | Renders a `.docx` via `mammoth` (original image bytes, no recompression) and prints it through the browser's own PDF engine |
+| EIS Plotter | `eis-plotter.html` | Nyquist + Bode plots from impedance data (Re/Im or Mag/Phase input), multi-file overlay |
+| Peak Integrator | `peak-integrator.html` | Click two baseline points on a curve to get peak height + trapezoidal peak area |
+| PDF Image Extractor | `pdf-image-extractor.html` | Pulls embedded raster images back out of a PDF at native resolution via `pdfjs-dist` |
+| Scale Bar Calibration | `scale-bar.html` | Click-calibrate a known distance on a micrograph/photo and burn a scale bar into a full-res copy |
+| Table Format Converter | `table-converter.html` | Converts between CSV, TSV, XLSX and JSON |
+| Uncertainty & Stats | `stats-calculator.html` | Mean/SD/SEM/CI for one dataset, or a Welch's t-test comparing two |
 
 ## Develop
 
@@ -47,6 +54,10 @@ Note: the background-remover page pulls in an ONNX Runtime WASM build
 (~24 MB) as part of its own lazy-loaded chunk. It is not fetched by any other
 page and is only downloaded by a visitor's browser the first time they
 actually click "Remove Background" on that one page.
+
+Note: similarly, the PDF Image Extractor page bundles `pdfjs-dist` (including
+a ~1.3 MB PDF worker script) into its own chunk — only fetched by visitors of
+that one page.
 
 ## Deploy (free, static hosting)
 
