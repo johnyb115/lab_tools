@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy & Security — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .prose { max-width: 70ch; }
+    .prose h2 { font-size: 1.15rem; margin-top: 2rem; color: var(--text); }
+    .prose h3 { font-size: 1rem; margin-top: 1.5rem; color: var(--text); }
+    .prose p, .prose li { color: var(--text-dim); line-height: 1.7; }
+    .prose ul { padding-left: 1.25rem; }
+    .prose li { margin-bottom: 0.4rem; }
+    .prose code { font-size: 0.88em; }
+    .note-box {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      margin: 1.25rem 0;
+    }
+    .note-box.warn { border-color: var(--warning); }
+    .note-box p:last-child { margin-bottom: 0; }
+    .note-box strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main prose">
+    <div class="page-header">
+      <h1>🔒 Privacy & Security</h1>
+      <p>How Lab Tools handles your data, and what you should know about using it.</p>
+    </div>
+
+    <h2>Your files stay in your browser</h2>
+    <p>
+      Every tool on this site runs entirely as client-side JavaScript. When you upload a
+      CSV, image, PDF, or any other file, it is read into your browser's memory, processed
+      there, and never transmitted to any server. There is no backend — the site is a
+      collection of static files served by GitHub Pages.
+    </p>
+    <ul>
+      <li>No file content is uploaded, stored, or logged anywhere.</li>
+      <li>No analytics, telemetry, or tracking scripts are included.</li>
+      <li>No cookies or local storage are used.</li>
+      <li>Downloads are generated in-browser via <code>URL.createObjectURL()</code> on locally computed blobs.</li>
+    </ul>
+
+    <h2>The one exception: Background Remover</h2>
+    <div class="note-box warn">
+      <p>
+        <strong>The Background Remover tool downloads an AI model from an external server on first use.</strong>
+        The model weights (roughly 30–90 MB depending on quality) are fetched from
+        <code>staticimgly.com</code>, a CDN operated by IMG.LY, the maintainers of the
+        <code>@imgly/background-removal</code> open-source library.
+      </p>
+      <p>
+        Your images are <strong>not</strong> sent to that server — the model runs locally
+        in WebAssembly inside your browser. However, the download request does reveal your
+        IP address and the fact that you are using the tool. After the first download, your
+        browser caches the model files, so subsequent visits do not repeat the request.
+      </p>
+    </div>
+
+    <h2>How the site is hosted</h2>
+    <p>
+      Lab Tools is hosted on <a href="https://pages.github.com/">GitHub Pages</a>, which
+      serves only static files. There is no server-side code, no database, no API, and no
+      way for the site to receive or store anything you type or upload.
+    </p>
+    <p>
+      The source code is public at
+      <a href="https://github.com/johnyb115/lab_tools">github.com/johnyb115/lab_tools</a> —
+      you can inspect every line.
+    </p>
+
+    <h2>HTTPS</h2>
+    <p>
+      The site is served over HTTPS via GitHub Pages, which means all traffic between your
+      browser and the server is encrypted. This prevents third parties on your network from
+      seeing or tampering with the pages you load.
+    </p>
+
+    <h2>What about "getting hacked"?</h2>
+    <p>
+      A static site has a very small attack surface compared to a typical web application.
+      There is no login system, no database to breach, no API to exploit, and no stored user
+      data to steal. The main risks are:
+    </p>
+    <ul>
+      <li>
+        <strong>GitHub account compromise</strong> — if the repository owner's GitHub account
+        is compromised, an attacker could push malicious code. This is mitigated by using a
+        strong password and two-factor authentication.
+      </li>
+      <li>
+        <strong>Supply-chain attack</strong> — a compromised npm dependency could inject
+        malicious code at build time. This is mitigated by keeping dependencies up to date,
+        reviewing <code>npm audit</code> output, and pinning dependency versions.
+      </li>
+      <li>
+        <strong>Cross-site scripting (XSS)</strong> — all user-controlled strings (file names,
+        column headers, cell values) are escaped before being inserted into the page, preventing
+        injection of malicious scripts.
+      </li>
+    </ul>
+
+    <h2>Recommendations for users</h2>
+    <ul>
+      <li>Use a modern, up-to-date browser (Chrome, Firefox, Edge, Safari).</li>
+      <li>If you are on a shared or public computer, close the tab when you are done — your data lives in browser memory and is released when the tab closes.</li>
+      <li>If you work with sensitive data, you can verify the site's behavior using your browser's Developer Tools (Network tab) — you will see zero outbound requests when using any tool except the Background Remover's initial model download.</li>
+    </ul>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/privacy.js"></script>
+</body>
+</html>

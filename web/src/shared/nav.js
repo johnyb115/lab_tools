@@ -50,6 +50,7 @@ export function initChrome(activeId) {
   if (footer) {
     footer.innerHTML = `
       Lab Tools — a set of client-side research utilities. Nothing you upload leaves your browser.
+      <br /><a href="./privacy.html">Privacy &amp; Security</a> · <a href="https://github.com/johnyb115/lab_tools">Source on GitHub</a>
     `
   }
 }
