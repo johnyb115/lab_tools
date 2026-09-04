@@ -468,6 +468,63 @@ function matchesSeries(hsv, target, tolerance) {
 // ------------------------------------------------------------------
 // Step 4 — Extraction: one point per pixel column, median row of matches
 // ------------------------------------------------------------------
+
+// Detects the plot frame rectangle.  Left & bottom come from axis positions
+// (Y-calib x avg → y-axis column, X-calib y avg → x-axis row).  Right & top
+// are found by scanning outward from the plot centre and looking for a line of
+// axis-coloured pixels with strong perpendicular continuity — this distinguishes
+// frame lines from thin data traces AND avoids dark image backgrounds.
+function makeDataAreaFilter() {
+  if (!xCalib || !yCalib || !baseImageData) return null
+  const margin = 5
+  const { width, height, data } = baseImageData
+
+  const yAxisX = Math.round((yCalib.point1.x + yCalib.point2.x) / 2)
+  const xAxisY = Math.round((xCalib.point1.y + xCalib.point2.y) / 2)
+
+  const sIdx = (xCalib.point1.y * width + xCalib.point1.x) * 4
+  const axR = data[sIdx], axG = data[sIdx + 1], axB = data[sIdx + 2]
+  const isAxis = (x, y) => {
+    if (x < 0 || x >= width || y < 0 || y >= height) return false
+    const i = (y * width + x) * 4
+    return Math.abs(data[i] - axR) < 40 &&
+      Math.abs(data[i + 1] - axG) < 40 &&
+      Math.abs(data[i + 2] - axB) < 40
+  }
+
+  const midX = Math.round((yAxisX + Math.max(xCalib.point1.x, xCalib.point2.x)) / 2)
+  const midY = Math.round((Math.min(yCalib.point1.y, yCalib.point2.y) + xAxisY) / 2)
+  const halfProbe = 50
+
+  let rightFrame = width
+  for (let x = midX; x < width; x++) {
+    if (isAxis(x, midY)) {
+      let vCount = 0
+      for (let dy = -halfProbe; dy <= halfProbe; dy++) {
+        if (isAxis(x, midY + dy)) vCount++
+      }
+      if (vCount > halfProbe * 2 * 0.8) { rightFrame = x; break }
+    }
+  }
+
+  let topFrame = 0
+  for (let y = midY; y >= 0; y--) {
+    if (isAxis(midX, y)) {
+      let hCount = 0
+      for (let dx = -halfProbe; dx <= halfProbe; dx++) {
+        if (isAxis(midX + dx, y)) hCount++
+      }
+      if (hCount > halfProbe * 2 * 0.8) { topFrame = y; break }
+    }
+  }
+
+  return (px, py) =>
+    px > yAxisX + margin &&
+    px < rightFrame - margin &&
+    py > topFrame + margin &&
+    py < xAxisY - margin
+}
+
 function median(values) {
   const sorted = [...values].sort((a, b) => a - b)
   const mid = Math.floor(sorted.length / 2)
@@ -477,11 +534,13 @@ function median(values) {
 function extractSeriesPoints(s) {
   if (!s.hsv || !baseImageData || !isCalibrated()) return []
   const { width, height, data } = baseImageData
+  const inDataArea = makeDataAreaFilter()
   const columns = Array.from({ length: width }, () => [])
 
   for (let y = 0; y < height; y++) {
     const rowOffset = y * width * 4
     for (let x = 0; x < width; x++) {
+      if (inDataArea && !inDataArea(x, y)) continue
       const i = rowOffset + x * 4
       const hsv = rgbToHsv(data[i], data[i + 1], data[i + 2])
       if (matchesSeries(hsv, s.hsv, s.tolerance)) columns[x].push(y)
@@ -515,15 +574,20 @@ function applyMaskOverlay(source, maskSeries) {
   const out = clone.data
   const HIGHLIGHT = [255, 0, 220] // bright magenta — contrasts with typical plot colors
   const alpha = 0.55
+  const inDataArea = makeDataAreaFilter()
 
-  for (let i = 0; i < out.length; i += 4) {
-    const hsv = rgbToHsv(source.data[i], source.data[i + 1], source.data[i + 2])
-    for (const s of maskSeries) {
-      if (matchesSeries(hsv, s.hsv, s.tolerance)) {
-        out[i] = Math.round(HIGHLIGHT[0] * alpha + out[i] * (1 - alpha))
-        out[i + 1] = Math.round(HIGHLIGHT[1] * alpha + out[i + 1] * (1 - alpha))
-        out[i + 2] = Math.round(HIGHLIGHT[2] * alpha + out[i + 2] * (1 - alpha))
-        break
+  for (let y = 0; y < source.height; y++) {
+    for (let x = 0; x < source.width; x++) {
+      if (inDataArea && !inDataArea(x, y)) continue
+      const i = (y * source.width + x) * 4
+      const hsv = rgbToHsv(source.data[i], source.data[i + 1], source.data[i + 2])
+      for (const s of maskSeries) {
+        if (matchesSeries(hsv, s.hsv, s.tolerance)) {
+          out[i] = Math.round(HIGHLIGHT[0] * alpha + out[i] * (1 - alpha))
+          out[i + 1] = Math.round(HIGHLIGHT[1] * alpha + out[i + 1] * (1 - alpha))
+          out[i + 2] = Math.round(HIGHLIGHT[2] * alpha + out[i + 2] * (1 - alpha))
+          break
+        }
       }
     }
   }

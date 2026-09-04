@@ -1,6 +1,6 @@
 import { initChrome } from '../shared/nav.js'
 import { initDropzone } from '../shared/dropzone.js'
-import { downloadBlob } from '../shared/download.js'
+import { downloadBlob, downloadText } from '../shared/download.js'
 import { escapeAttr } from '../shared/dom.js'
 
 initChrome('scale-bar')
@@ -24,9 +24,27 @@ const barUnitReadout = document.getElementById('sb-bar-unit-readout')
 const suggestLengthBtn = document.getElementById('sb-suggest-length-btn')
 const cornerButtons = document.querySelectorAll('#sb-style-panel .sb-corner-grid button')
 const colorInput = document.getElementById('sb-bar-color')
+const colorTextInput = document.getElementById('sb-bar-color-text')
+const opacityInput = document.getElementById('sb-bar-opacity')
+const opacityValue = document.getElementById('sb-bar-opacity-value')
 const thicknessInput = document.getElementById('sb-bar-thickness')
 const thicknessValue = document.getElementById('sb-bar-thickness-value')
+const endTicksCheckbox = document.getElementById('sb-end-ticks')
+const tickHeightInput = document.getElementById('sb-tick-height')
+const tickHeightValue = document.getElementById('sb-tick-height-value')
+const tickHeightField = document.getElementById('sb-tick-height-field')
+const showStrokeCheckbox = document.getElementById('sb-show-stroke')
+const strokeColorInput = document.getElementById('sb-stroke-color')
+const strokeColorTextInput = document.getElementById('sb-stroke-color-text')
+const strokeAutoBtn = document.getElementById('sb-stroke-auto-btn')
+const strokeWidthInput = document.getElementById('sb-stroke-width')
+const strokeWidthValue = document.getElementById('sb-stroke-width-value')
+const strokeOptions = document.getElementById('sb-stroke-options')
 const showLabelCheckbox = document.getElementById('sb-show-label')
+const fontFamilySelect = document.getElementById('sb-font-family')
+const fontSizeInput = document.getElementById('sb-font-size')
+const fontAutoBtn = document.getElementById('sb-font-auto-btn')
+const labelOptions = document.getElementById('sb-label-options')
 
 const canvas = document.getElementById('sb-canvas')
 const ctx = canvas.getContext('2d')
@@ -37,6 +55,8 @@ const outputWrap = document.getElementById('sb-output-wrap')
 const outputCanvas = document.getElementById('sb-output-canvas')
 const outCtx = outputCanvas.getContext('2d')
 const downloadBtn = document.getElementById('sb-download-btn')
+const downloadSvgBtn = document.getElementById('sb-download-svg')
+const downloadPptxBtn = document.getElementById('sb-download-pptx')
 
 canvasWrap.style.display = 'none'
 
@@ -57,7 +77,23 @@ let awaitingConfirm = null // { point1, point2 } once 2 clicks are in but distan
 let calib = null // { point1, point2, knownDistance, unit, originalPixelDist, unitsPerOriginalPixel }
 let currentFileName = ''
 
-const barConfig = { lengthUnits: 0, corner: 'bottom-right', color: '#ffffff', thicknessPx: 10, showLabel: true }
+const barConfig = {
+  lengthUnits: 0,
+  corner: 'bottom-right',
+  color: '#ffffff',
+  opacity: 1,
+  thicknessPx: 10,
+  endTicks: true,
+  tickHeightMul: 3,
+  showStroke: true,
+  strokeColor: '#000000',
+  strokeAuto: true,
+  strokeWidth: 2,
+  showLabel: true,
+  fontFamily: 'Arial',
+  fontSize: 0,
+  fontSizeAuto: true,
+}
 
 // ------------------------------------------------------------------
 // Upload
@@ -344,8 +380,34 @@ function initStylePanelDefaults() {
   barConfig.corner = 'bottom-right'
   cornerButtons.forEach((b) => b.classList.toggle('is-active', b.dataset.corner === 'bottom-right'))
   barConfig.color = colorInput.value || '#ffffff'
+  barConfig.opacity = 1
+  opacityInput.value = '100'
+  opacityValue.textContent = '100%'
   barConfig.thicknessPx = Number(thicknessInput.value)
+  barConfig.endTicks = true
+  endTicksCheckbox.checked = true
+  barConfig.tickHeightMul = 3
+  tickHeightInput.value = '3'
+  tickHeightValue.textContent = '3×'
+  tickHeightField.hidden = false
+  barConfig.showStroke = true
+  showStrokeCheckbox.checked = true
+  barConfig.strokeAuto = true
+  barConfig.strokeColor = outlineColorFor(barConfig.color)
+  strokeColorInput.value = barConfig.strokeColor
+  strokeColorTextInput.value = barConfig.strokeColor
+  barConfig.strokeWidth = Math.max(2, Math.round(barConfig.thicknessPx * 0.25))
+  strokeWidthInput.value = String(barConfig.strokeWidth)
+  strokeWidthValue.textContent = String(barConfig.strokeWidth)
+  strokeOptions.hidden = false
   barConfig.showLabel = showLabelCheckbox.checked
+  barConfig.fontFamily = 'Arial'
+  fontFamilySelect.value = 'Arial'
+  barConfig.fontSizeAuto = true
+  const autoFontSize = Math.max(14, Math.round(barConfig.thicknessPx * 3.2))
+  barConfig.fontSize = autoFontSize
+  fontSizeInput.value = String(autoFontSize)
+  labelOptions.hidden = false
 }
 
 function suggestLength() {
@@ -388,19 +450,101 @@ cornerButtons.forEach((btn) => {
   })
 })
 
-colorInput.addEventListener('input', () => {
-  barConfig.color = colorInput.value
+function syncColor(picker, text, apply) {
+  picker.addEventListener('input', () => { text.value = picker.value; apply(picker.value) })
+  text.addEventListener('input', () => {
+    const v = text.value.startsWith('#') ? text.value : '#' + text.value
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) { picker.value = v; apply(v) }
+  })
+}
+
+syncColor(colorInput, colorTextInput, (v) => {
+  barConfig.color = v
+  if (barConfig.strokeAuto) {
+    barConfig.strokeColor = outlineColorFor(v)
+    strokeColorInput.value = barConfig.strokeColor
+    strokeColorTextInput.value = barConfig.strokeColor
+  }
+  updateOutput()
+})
+
+opacityInput.addEventListener('input', () => {
+  barConfig.opacity = Number(opacityInput.value) / 100
+  opacityValue.textContent = opacityInput.value + '%'
   updateOutput()
 })
 
 thicknessInput.addEventListener('input', () => {
   barConfig.thicknessPx = Number(thicknessInput.value)
   thicknessValue.textContent = thicknessInput.value
+  if (barConfig.fontSizeAuto) {
+    const fs = Math.max(14, Math.round(barConfig.thicknessPx * 3.2))
+    barConfig.fontSize = fs
+    fontSizeInput.value = String(fs)
+  }
+  updateOutput()
+})
+
+endTicksCheckbox.addEventListener('change', () => {
+  barConfig.endTicks = endTicksCheckbox.checked
+  tickHeightField.hidden = !barConfig.endTicks
+  updateOutput()
+})
+
+tickHeightInput.addEventListener('input', () => {
+  barConfig.tickHeightMul = Number(tickHeightInput.value)
+  tickHeightValue.textContent = tickHeightInput.value + '×'
+  updateOutput()
+})
+
+showStrokeCheckbox.addEventListener('change', () => {
+  barConfig.showStroke = showStrokeCheckbox.checked
+  strokeOptions.hidden = !barConfig.showStroke
+  updateOutput()
+})
+
+syncColor(strokeColorInput, strokeColorTextInput, (v) => {
+  barConfig.strokeColor = v
+  barConfig.strokeAuto = false
+  updateOutput()
+})
+
+strokeAutoBtn.addEventListener('click', () => {
+  barConfig.strokeAuto = true
+  barConfig.strokeColor = outlineColorFor(barConfig.color)
+  strokeColorInput.value = barConfig.strokeColor
+  strokeColorTextInput.value = barConfig.strokeColor
+  updateOutput()
+})
+
+strokeWidthInput.addEventListener('input', () => {
+  barConfig.strokeWidth = Number(strokeWidthInput.value)
+  strokeWidthValue.textContent = strokeWidthInput.value
   updateOutput()
 })
 
 showLabelCheckbox.addEventListener('change', () => {
   barConfig.showLabel = showLabelCheckbox.checked
+  labelOptions.hidden = !barConfig.showLabel
+  updateOutput()
+})
+
+fontFamilySelect.addEventListener('change', () => {
+  barConfig.fontFamily = fontFamilySelect.value
+  updateOutput()
+})
+
+fontSizeInput.addEventListener('input', () => {
+  barConfig.fontSize = Number(fontSizeInput.value) || 14
+  barConfig.fontSizeAuto = false
+  updateOutput()
+})
+
+fontAutoBtn.addEventListener('click', () => {
+  barConfig.fontSizeAuto = true
+  const fs = Math.max(14, Math.round(barConfig.thicknessPx * 3.2))
+  barConfig.fontSize = fs
+  fontSizeInput.value = String(fs)
   updateOutput()
 })
 
@@ -413,45 +557,45 @@ function updateOutput() {
 }
 
 function drawScaleBarOnOutput() {
-  const W = img.naturalWidth
-  const H = img.naturalHeight
-  const barPx = Math.max(1, barConfig.lengthUnits / calib.unitsPerOriginalPixel)
-  const thickness = Math.max(1, barConfig.thicknessPx)
-  const margin = Math.max(12, Math.round(Math.min(W, H) * 0.03))
-
-  const isRight = barConfig.corner.endsWith('right')
-  const isBottom = barConfig.corner.startsWith('bottom')
-  const x = isRight ? W - margin - barPx : margin
-  const y = isBottom ? H - margin - thickness : margin
-
-  const outline = outlineColorFor(barConfig.color)
+  const g = computeBarGeometry()
 
   outCtx.save()
-  outCtx.strokeStyle = outline
-  outCtx.lineWidth = Math.max(2, Math.round(thickness * 0.25))
-  outCtx.strokeRect(x, y, barPx, thickness)
+  outCtx.globalAlpha = g.opacity
+
+  if (g.strokeWidth > 0 && g.strokeColor !== 'none') {
+    outCtx.strokeStyle = g.strokeColor
+    outCtx.lineWidth = g.strokeWidth
+    outCtx.strokeRect(g.x, g.y, g.barPx, g.thickness)
+  }
   outCtx.fillStyle = barConfig.color
-  outCtx.fillRect(x, y, barPx, thickness)
-  outCtx.restore()
+  outCtx.fillRect(g.x, g.y, g.barPx, g.thickness)
+
+  if (g.endTicks && g.tickHeight > 0) {
+    outCtx.fillRect(g.x, g.tickY, g.strokeWidth || Math.max(2, g.thickness * 0.15), g.tickHeight)
+    outCtx.fillRect(g.x + g.barPx - (g.strokeWidth || Math.max(2, g.thickness * 0.15)), g.tickY, g.strokeWidth || Math.max(2, g.thickness * 0.15), g.tickHeight)
+    if (g.strokeWidth > 0 && g.strokeColor !== 'none') {
+      outCtx.strokeStyle = g.strokeColor
+      outCtx.lineWidth = g.strokeWidth
+      outCtx.strokeRect(g.x, g.tickY, g.strokeWidth || Math.max(2, g.thickness * 0.15), g.tickHeight)
+      outCtx.strokeRect(g.x + g.barPx - (g.strokeWidth || Math.max(2, g.thickness * 0.15)), g.tickY, g.strokeWidth || Math.max(2, g.thickness * 0.15), g.tickHeight)
+    }
+  }
 
   if (barConfig.showLabel) {
-    const label = `${formatLength(barConfig.lengthUnits)} ${calib.unit}`
-    const fontSize = Math.max(14, Math.round(thickness * 3.2))
-    const labelGap = Math.max(4, Math.round(thickness * 0.3))
-
-    outCtx.save()
-    outCtx.font = `bold ${fontSize}px sans-serif`
+    outCtx.font = `bold ${g.fontSize}px "${g.fontFamily}", sans-serif`
     outCtx.textAlign = 'center'
-    outCtx.textBaseline = isBottom ? 'bottom' : 'top'
-    const textX = x + barPx / 2
-    const textY = isBottom ? y - labelGap : y + thickness + labelGap
-    outCtx.lineWidth = Math.max(2, Math.round(fontSize * 0.18))
-    outCtx.strokeStyle = outline
-    outCtx.strokeText(label, textX, textY)
+    outCtx.textBaseline = g.isBottom ? 'bottom' : 'top'
+    if (g.strokeWidth > 0 && g.strokeColor !== 'none') {
+      outCtx.lineWidth = Math.max(g.strokeWidth, Math.round(g.fontSize * 0.12))
+      outCtx.lineJoin = 'round'
+      outCtx.strokeStyle = g.strokeColor
+      outCtx.strokeText(g.label, g.textX, g.textY)
+    }
     outCtx.fillStyle = barConfig.color
-    outCtx.fillText(label, textX, textY)
-    outCtx.restore()
+    outCtx.fillText(g.label, g.textX, g.textY)
   }
+
+  outCtx.restore()
 }
 
 // Picks black or white — whichever contrasts with the chosen bar color — for the
@@ -481,7 +625,41 @@ function fmtNum(x, sig = 4) {
 }
 
 // ------------------------------------------------------------------
-// Download
+// Shared: compute scale bar geometry in original-image pixel space
+// ------------------------------------------------------------------
+function computeBarGeometry() {
+  const W = img.naturalWidth
+  const H = img.naturalHeight
+  const barPx = Math.max(1, barConfig.lengthUnits / calib.unitsPerOriginalPixel)
+  const thickness = Math.max(1, barConfig.thicknessPx)
+  const margin = Math.max(12, Math.round(Math.min(W, H) * 0.03))
+
+  const isRight = barConfig.corner.endsWith('right')
+  const isBottom = barConfig.corner.startsWith('bottom')
+  const x = isRight ? W - margin - barPx : margin
+  const y = isBottom ? H - margin - thickness : margin
+
+  const label = `${formatLength(barConfig.lengthUnits)} ${calib.unit}`
+  const fontSize = barConfig.fontSize || Math.max(14, Math.round(thickness * 3.2))
+  const labelGap = Math.max(4, Math.round(thickness * 0.3))
+  const textX = x + barPx / 2
+  const textY = isBottom ? y - labelGap : y + thickness + labelGap
+  const strokeColor = barConfig.showStroke ? barConfig.strokeColor : 'none'
+  const strokeWidth = barConfig.showStroke ? barConfig.strokeWidth : 0
+  const tickHeight = barConfig.endTicks ? thickness * barConfig.tickHeightMul : 0
+  const tickY = y + thickness / 2 - tickHeight / 2
+
+  return {
+    W, H, barPx, thickness, x, y, label, fontSize, labelGap, textX, textY,
+    strokeColor, strokeWidth, isBottom,
+    opacity: barConfig.opacity,
+    fontFamily: barConfig.fontFamily,
+    endTicks: barConfig.endTicks, tickHeight, tickY,
+  }
+}
+
+// ------------------------------------------------------------------
+// Download: PNG (flat burn-in)
 // ------------------------------------------------------------------
 downloadBtn.addEventListener('click', () => {
   if (!calib) return
@@ -491,6 +669,153 @@ downloadBtn.addEventListener('click', () => {
     downloadBlob(blob, `${base}_scalebar.png`)
   }, 'image/png')
 })
+
+// ------------------------------------------------------------------
+// Download: SVG (editable scale bar as separate elements)
+// ------------------------------------------------------------------
+downloadSvgBtn.addEventListener('click', async () => {
+  if (!calib || !img) return
+  const g = computeBarGeometry()
+  const dataUrl = await imageToDataUrl(img)
+
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  const hasStroke = g.strokeWidth > 0 && g.strokeColor !== 'none'
+  const strokeAttr = hasStroke ? `stroke="${g.strokeColor}" stroke-width="${g.strokeWidth}"` : 'stroke="none"'
+  const tickW = hasStroke ? g.strokeWidth : Math.max(2, g.thickness * 0.15)
+
+  let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="${g.W}" height="${g.H}" viewBox="0 0 ${g.W} ${g.H}">
+  <image xlink:href="${esc(dataUrl)}" width="${g.W}" height="${g.H}" />
+  <g id="scale-bar" opacity="${g.opacity}">`
+
+  svg += `
+    <rect x="${g.x}" y="${g.y}" width="${g.barPx}" height="${g.thickness}"
+          fill="${barConfig.color}" ${strokeAttr} />`
+
+  if (g.endTicks && g.tickHeight > 0) {
+    svg += `
+    <rect x="${g.x}" y="${g.tickY}" width="${tickW}" height="${g.tickHeight}"
+          fill="${barConfig.color}" ${strokeAttr} />
+    <rect x="${g.x + g.barPx - tickW}" y="${g.tickY}" width="${tickW}" height="${g.tickHeight}"
+          fill="${barConfig.color}" ${strokeAttr} />`
+  }
+
+  if (barConfig.showLabel) {
+    const anchor = 'middle'
+    const baseline = g.isBottom ? 'auto' : 'hanging'
+    const textStrokeW = Math.max(g.strokeWidth, Math.round(g.fontSize * 0.12))
+    const textStroke = hasStroke
+      ? `stroke="${g.strokeColor}" stroke-width="${textStrokeW}" stroke-linejoin="round" paint-order="stroke fill"`
+      : 'stroke="none"'
+    svg += `
+    <text x="${g.textX}" y="${g.textY}" font-family="${esc(g.fontFamily)}, sans-serif" font-size="${g.fontSize}"
+          font-weight="bold" text-anchor="${anchor}" dominant-baseline="${baseline}"
+          fill="${barConfig.color}" ${textStroke}>${esc(g.label)}</text>`
+  }
+
+  svg += `
+  </g>
+</svg>`
+
+  const base = currentFileName.replace(/\.[^./]+$/, '') || 'image'
+  downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), `${base}_scalebar.svg`)
+})
+
+// ------------------------------------------------------------------
+// Download: PPTX (editable scale bar as separate shape + text box)
+// ------------------------------------------------------------------
+downloadPptxBtn.addEventListener('click', async () => {
+  if (!calib || !img) return
+  downloadPptxBtn.disabled = true
+  downloadPptxBtn.textContent = 'Generating…'
+  try {
+    const PptxGenJS = (await import('pptxgenjs')).default
+    const pptx = new PptxGenJS()
+
+    const g = computeBarGeometry()
+    const hasStroke = g.strokeWidth > 0 && g.strokeColor !== 'none'
+    const fillHex = barConfig.color.replace('#', '')
+    const strokeHex = g.strokeColor.replace('#', '')
+    const lineOpts = hasStroke ? { color: strokeHex, width: Math.max(0.5, g.strokeWidth * 0.75) } : { type: 'none' }
+    const opacityPct = Math.round(g.opacity * 100)
+
+    const W_IN = g.W / 96
+    const H_IN = g.H / 96
+    pptx.defineLayout({ name: 'IMG', width: W_IN, height: H_IN })
+    pptx.layout = 'IMG'
+
+    const slide = pptx.addSlide()
+
+    const dataUrl = await imageToDataUrl(img)
+    slide.addImage({ data: dataUrl, x: 0, y: 0, w: W_IN, h: H_IN })
+
+    const barX = g.x / 96
+    const barY = g.y / 96
+    const barW = g.barPx / 96
+    const barH = g.thickness / 96
+
+    slide.addShape(pptx.ShapeType.rect, {
+      x: barX, y: barY, w: barW, h: barH,
+      fill: { color: fillHex, transparency: 100 - opacityPct },
+      line: lineOpts,
+    })
+
+    if (g.endTicks && g.tickHeight > 0) {
+      const tickW = (hasStroke ? g.strokeWidth : Math.max(2, g.thickness * 0.15)) / 96
+      const tickH = g.tickHeight / 96
+      const tickYIn = g.tickY / 96
+      slide.addShape(pptx.ShapeType.rect, {
+        x: barX, y: tickYIn, w: tickW, h: tickH,
+        fill: { color: fillHex, transparency: 100 - opacityPct }, line: lineOpts,
+      })
+      slide.addShape(pptx.ShapeType.rect, {
+        x: barX + barW - tickW, y: tickYIn, w: tickW, h: tickH,
+        fill: { color: fillHex, transparency: 100 - opacityPct }, line: lineOpts,
+      })
+    }
+
+    if (barConfig.showLabel) {
+      const fontPt = Math.max(6, Math.round(g.fontSize * 0.75))
+      const labelH = fontPt * 1.6 / 72
+      const labelY = g.isBottom ? barY - labelH : barY + barH
+      const textOpts = {
+        x: barX, y: labelY, w: barW, h: labelH,
+        align: 'center', valign: 'middle',
+        fontSize: fontPt, bold: true,
+        color: fillHex,
+        fontFace: g.fontFamily,
+        transparency: 100 - opacityPct,
+      }
+      if (hasStroke) {
+        textOpts.outline = { size: Math.max(g.strokeWidth * 0.75, fontPt * 0.04), color: strokeHex }
+      }
+      slide.addText(g.label, textOpts)
+    }
+
+    const pptxBlob = await pptx.write({ outputType: 'blob' })
+    const base = currentFileName.replace(/\.[^./]+$/, '') || 'image'
+    downloadBlob(pptxBlob, `${base}_scalebar.pptx`)
+  } catch (err) {
+    console.error(err)
+    alert('PPTX generation failed: ' + (err?.message || err))
+  } finally {
+    downloadPptxBtn.disabled = false
+    downloadPptxBtn.textContent = '⬇ PPTX (editable)'
+  }
+})
+
+// Convert the loaded <img> to a data URL for embedding in SVG/PPTX.
+function imageToDataUrl(image) {
+  return new Promise((resolve) => {
+    const c = document.createElement('canvas')
+    c.width = image.naturalWidth
+    c.height = image.naturalHeight
+    c.getContext('2d').drawImage(image, 0, 0)
+    resolve(c.toDataURL('image/png'))
+  })
+}
 
 // ------------------------------------------------------------------
 // Initial render
