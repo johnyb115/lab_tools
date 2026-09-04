@@ -29,9 +29,11 @@
       <h1>🪄 Background Remover</h1>
       <p>
         Cuts the background out of a photo entirely in your browser using a small AI
-        segmentation model, and gives you back a transparent PNG. Nothing is uploaded to
-        a server. The first run downloads the model (roughly 5–15s depending on your
-        connection); it's cached after that, so repeat visits are fast.
+        segmentation model, and gives you back a transparent PNG. Your images are never
+        sent to a server. The first run downloads the model weights from
+        <code>staticimgly.com</code> (the CDN for the open-source
+        <a href="https://github.com/nicolo-ribaudo/background-removal-js">@imgly/background-removal</a>
+        library); they're cached after that, so repeat visits are instant.
       </p>
     </div>
 

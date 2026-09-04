@@ -24,6 +24,7 @@ export default defineConfig({
         tableConverter: page('table-converter.html'),
         statsCalculator: page('stats-calculator.html'),
         pcbQr: page('pcb-qr.html'),
+        privacy: page('privacy.html'),
       },
     },
   },
