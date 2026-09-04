@@ -150,7 +150,7 @@ function corridorBounds(anchors, pos, _module, qrSide) {
 
 // ---- Route generation -------------------------------------------------------
 
-function routeInCorridor(rng, anchor, lo, hi, decor, padOuter, stroke) {
+function routeInCorridor(rng, anchor, lo, hi, decor, padOuter, stroke, padding) {
   const gap = 0.45
   let pathLo = lo + stroke / 2 + gap
   let pathHi = hi - stroke / 2 - gap
@@ -166,8 +166,9 @@ function routeInCorridor(rng, anchor, lo, hi, decor, padOuter, stroke) {
   if (leftRoom >= minDiag) dirs.push([-1, leftRoom])
   if (rightRoom >= minDiag) dirs.push([1, rightRoom])
 
+  const maxV = Math.max(decor * 0.2, decor - padding - padOuter)
   const style = rng.choices([0, 1, 2], [2, 6, 3], 1)[0]
-  const vEndTarget = rng.uniform(decor * 0.38, decor * 0.94)
+  const vEndTarget = rng.uniform(maxV * 0.4, maxV * 0.98)
 
   if (style === 0 || dirs.length === 0) {
     return [[anchor, 0], [anchor, vEndTarget]]
@@ -182,7 +183,7 @@ function routeInCorridor(rng, anchor, lo, hi, decor, padOuter, stroke) {
   if (style === 1 || room < 2 * minDiag) {
     const afterDiag = firstV + shift
     let vEnd = Math.max(vEndTarget, afterDiag + decor * 0.08)
-    vEnd = Math.min(vEnd, decor * 0.96)
+    vEnd = Math.min(vEnd, maxV)
     return [[anchor, 0], [anchor, firstV], [termU, afterDiag], [termU, vEnd]]
   }
 
@@ -234,6 +235,7 @@ function makeSvg({
   sizeMm,
   canvasCornerRadiusMm,
   transparentCanvas,
+  padding,
 }) {
   const trackColor = tc || color
   const matrix = qrMatrix(data)
@@ -261,6 +263,7 @@ function makeSvg({
         decor,
         padOuter,
         stroke,
+        padding,
       )
       const pts = localPts.map(([u, v]) =>
         localToXY(side, u, v, qrX, qrY, qrSide),
@@ -370,6 +373,8 @@ const el = {
   viaRadiusRange: $('via-radius-range'),
   cornerRadius: $('corner-radius'),
   cornerRadiusRange: $('corner-radius-range'),
+  edgePadding: $('edge-padding'),
+  edgePaddingRange: $('edge-padding-range'),
   moduleSize: $('module-size'),
   decorSpace: $('decor-space'),
   preview: $('preview'),
@@ -401,6 +406,7 @@ syncRangeNum(el.tracksPerSideRange, el.tracksPerSide)
 syncRangeNum(el.trackWidthRange, el.trackWidth)
 syncRangeNum(el.viaRadiusRange, el.viaRadius)
 syncRangeNum(el.cornerRadiusRange, el.cornerRadius)
+syncRangeNum(el.edgePaddingRange, el.edgePadding)
 
 syncColorText(el.qrColorPicker, el.qrColor)
 syncColorText(el.trackColorPicker, el.trackColor)
@@ -433,6 +439,7 @@ function update() {
       sizeMm: Number(el.sizeMm.value) || 100,
       canvasCornerRadiusMm: Number(el.cornerRadius.value),
       transparentCanvas: el.transparent.checked,
+      padding: Number(el.edgePadding.value) || 0,
     })
     currentSvg = svg
 
@@ -482,6 +489,8 @@ document
       '#via-radius-range',
       '#corner-radius',
       '#corner-radius-range',
+      '#edge-padding',
+      '#edge-padding-range',
       '#module-size',
       '#decor-space',
       '#transparent',
