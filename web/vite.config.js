@@ -23,6 +23,7 @@ export default defineConfig({
         scaleBar: page('scale-bar.html'),
         tableConverter: page('table-converter.html'),
         statsCalculator: page('stats-calculator.html'),
+        pcbQr: page('pcb-qr.html'),
       },
     },
   },

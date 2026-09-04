@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCB QR Generator — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🔲 PCB QR Generator</h1>
+      <p>Generate QR codes with decorative PCB-style traces and vias. The preview updates live as you adjust parameters.</p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Content</h2>
+          <div class="field">
+            <label for="data">Data (URL or text)</label>
+            <input type="text" id="data" value="https://example.com/registration" />
+          </div>
+          <div class="field">
+            <label for="seed">Random Seed</label>
+            <div style="display:flex;gap:0.5rem">
+              <input type="number" id="seed" value="2026" step="1" style="flex:1" />
+              <button class="btn" id="randomize-btn" style="width:auto;padding:0.5rem 0.7rem" title="Randomize seed">🎲</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Colors</h2>
+          <div class="field">
+            <label for="qr-color">QR Modules</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="color" id="qr-color-picker" value="#083777" />
+              <input type="text" id="qr-color" value="#083777" style="flex:1" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="track-color">Tracks &amp; Vias</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="color" id="track-color-picker" value="#083777" />
+              <input type="text" id="track-color" value="#083777" style="flex:1" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="qr-bg">QR Background</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="color" id="qr-bg-picker" value="#ffffff" />
+              <input type="text" id="qr-bg" value="#ffffff" style="flex:1" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="canvas-color">Canvas</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="color" id="canvas-color-picker" value="#ffffff" />
+              <input type="text" id="canvas-color" value="#ffffff" style="flex:1" />
+            </div>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="transparent" />
+            <label for="transparent">Transparent canvas</label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Geometry</h2>
+          <div class="field">
+            <label for="size-mm">Size (mm)</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="range" id="size-mm-range" min="20" max="300" step="1" value="100" style="flex:1" />
+              <input type="number" id="size-mm" value="100" min="20" max="300" step="1" style="width:4.5rem" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="tracks-per-side">Tracks per Side</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="range" id="tracks-per-side-range" min="1" max="20" step="1" value="12" style="flex:1" />
+              <input type="number" id="tracks-per-side" value="12" min="1" max="20" step="1" style="width:4.5rem" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="track-width">Track Width</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="range" id="track-width-range" min="0.5" max="15" step="0.1" value="5.4" style="flex:1" />
+              <input type="number" id="track-width" value="5.4" min="0.5" max="15" step="0.1" style="width:4.5rem" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="via-radius">Via Radius</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="range" id="via-radius-range" min="0.5" max="15" step="0.1" value="6.3" style="flex:1" />
+              <input type="number" id="via-radius" value="6.3" min="0.5" max="15" step="0.1" style="width:4.5rem" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="corner-radius">Corner Radius (mm)</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="range" id="corner-radius-range" min="0" max="30" step="0.5" value="5" style="flex:1" />
+              <input type="number" id="corner-radius" value="5" min="0" max="30" step="0.5" style="width:4.5rem" />
+            </div>
+          </div>
+          <hr class="sep" />
+          <div class="field-row">
+            <div class="field">
+              <label for="module-size">Module Size</label>
+              <input type="number" id="module-size" value="10" min="1" max="30" step="0.5" />
+            </div>
+            <div class="field">
+              <label for="decor-space">Decor Space</label>
+              <input type="number" id="decor-space" value="105" min="10" max="300" step="1" />
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div id="error-msg"></div>
+        <div class="plot-area" id="preview-area" style="display:flex;align-items:center;justify-content:center;position:sticky;top:5rem">
+          <div id="preview" style="width:100%;max-height:70vh;overflow:auto"></div>
+        </div>
+        <div style="margin-top:0.9rem;display:flex;gap:0.5rem">
+          <input type="text" id="filename" value="pcb_qr.svg" style="flex:1" />
+          <button class="btn btn-primary" id="download-btn" style="width:auto">Download SVG</button>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer" class="site-footer"></footer>
+  <script type="module" src="/src/tools/pcbQr.js"></script>
+</body>
+</html>
