@@ -75,9 +75,10 @@
     <div class="page-header">
       <h1>📏 Scale Bar Calibration</h1>
       <p>
-        Upload a micrograph or photo, click two points a known distance apart, and burn a
-        calibrated scale bar into a full-resolution copy of the image. Everything runs locally
-        in your browser — nothing is uploaded anywhere.
+        Upload a micrograph or photo, click two points a known distance apart, and add a
+        calibrated scale bar. Download as editable SVG or PPTX (scale bar stays a separate
+        object you can move and resize) or as a flat PNG. Everything runs locally in your
+        browser — nothing is uploaded anywhere.
       </p>
     </div>
 
@@ -136,11 +137,24 @@
 
           <div class="field">
             <label for="sb-bar-color">Bar &amp; label color</label>
-            <input id="sb-bar-color" type="color" value="#ffffff" />
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input id="sb-bar-color" type="color" value="#ffffff" />
+              <input id="sb-bar-color-text" type="text" value="#ffffff" style="flex:1" />
+            </div>
           </div>
 
           <div class="field">
-            <label for="sb-bar-thickness">Bar thickness (px, original image)</label>
+            <label for="sb-bar-opacity">Opacity</label>
+            <input id="sb-bar-opacity" type="range" min="0" max="100" value="100" />
+            <div class="range-readout">
+              <span>transparent</span>
+              <span id="sb-bar-opacity-value">100%</span>
+              <span>opaque</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="sb-bar-thickness">Bar thickness (px)</label>
             <input id="sb-bar-thickness" type="range" min="1" value="10" />
             <div class="range-readout">
               <span>thin</span>
@@ -150,9 +164,77 @@
           </div>
 
           <label class="checkbox-row">
+            <input type="checkbox" id="sb-end-ticks" checked />
+            End ticks (serifs)
+          </label>
+
+          <div class="field" id="sb-tick-height-field">
+            <label for="sb-tick-height">Tick height (× bar thickness)</label>
+            <input id="sb-tick-height" type="range" min="1" max="6" step="0.5" value="3" />
+            <div class="range-readout">
+              <span>short</span>
+              <span id="sb-tick-height-value">3×</span>
+              <span>tall</span>
+            </div>
+          </div>
+
+          <hr class="sep" />
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="sb-show-stroke" checked />
+            Outline / stroke
+          </label>
+
+          <div id="sb-stroke-options">
+            <div class="field">
+              <label for="sb-stroke-color">Stroke color</label>
+              <div style="display:flex;gap:0.5rem;align-items:center">
+                <input id="sb-stroke-color" type="color" value="#000000" />
+                <input id="sb-stroke-color-text" type="text" value="#000000" style="flex:1" />
+                <button class="btn" id="sb-stroke-auto-btn" type="button" style="width:auto;padding:0.4rem 0.6rem;font-size:0.78rem">Auto</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="sb-stroke-width">Stroke width (px)</label>
+              <input id="sb-stroke-width" type="range" min="0.5" max="10" step="0.5" value="2" />
+              <div class="range-readout">
+                <span>thin</span>
+                <span id="sb-stroke-width-value">2</span>
+                <span>thick</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="sep" />
+
+          <label class="checkbox-row">
             <input type="checkbox" id="sb-show-label" checked />
             Show distance label
           </label>
+
+          <div id="sb-label-options">
+            <div class="field">
+              <label for="sb-font-family">Font</label>
+              <select id="sb-font-family">
+                <option value="Arial">Arial</option>
+                <option value="Helvetica">Helvetica</option>
+                <option value="Calibri">Calibri</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Tahoma">Tahoma</option>
+                <option value="Segoe UI">Segoe UI</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sb-font-size">Font size (px)</label>
+              <div style="display:flex;gap:0.5rem;align-items:center">
+                <input id="sb-font-size" type="number" min="6" max="200" step="1" style="flex:1" />
+                <button class="btn" id="sb-font-auto-btn" type="button" style="width:auto;padding:0.4rem 0.6rem;font-size:0.78rem">Auto</button>
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -165,8 +247,10 @@
         <div id="sb-output-wrap" hidden>
           <h2 style="margin-top: 1.25rem;">Preview (full resolution)</h2>
           <canvas id="sb-output-canvas"></canvas>
-          <div class="btn-row" style="margin-top: 0.8rem;">
-            <button id="sb-download-btn" class="btn btn-primary" type="button">⬇ Download PNG</button>
+          <div style="margin-top: 0.8rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button id="sb-download-svg" class="btn btn-primary" type="button" style="flex:1">⬇ SVG (editable)</button>
+            <button id="sb-download-pptx" class="btn btn-primary" type="button" style="flex:1">⬇ PPTX (editable)</button>
+            <button id="sb-download-btn" class="btn" type="button" style="flex:1">⬇ PNG (flat)</button>
           </div>
         </div>
       </section>
