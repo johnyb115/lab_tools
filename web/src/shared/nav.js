@@ -17,7 +17,7 @@ export const NAV_ITEMS = [
   { id: 'scale-bar', label: 'Scale Bar Calibration', href: './scale-bar.html', icon: '📏' },
   { id: 'stats-calculator', label: 'Uncertainty & Stats', href: './stats-calculator.html', icon: '🎯' },
   { id: 'table-converter', label: 'Table Format Converter', href: './table-converter.html', icon: '🔁' },
-  { id: 'word-to-pdf', label: 'Word → High-Quality PDF', href: './word-to-pdf.html', icon: '📝' },
+  // { id: 'word-to-pdf', label: 'Word → High-Quality PDF', href: './word-to-pdf.html', icon: '📝' },
   { id: 'pdf-image-extractor', label: 'PDF Image Extractor', href: './pdf-image-extractor.html', icon: '📤' },
   { id: 'pcb-qr', label: 'PCB QR Generator', href: './pcb-qr.html', icon: '🔲' },
 ]
