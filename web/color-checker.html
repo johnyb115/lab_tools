@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Palette Checker — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    .cc-swatch-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg-elev-2);
+      margin-bottom: 0.4rem;
+    }
+    .cc-swatch-row input[type="color"] { width: 36px; height: 36px; flex-shrink: 0; }
+    .cc-swatch-row input[type="text"] { flex: 1; min-width: 0; }
+    .cc-swatch-row .btn { padding: 0.3rem 0.5rem; font-size: 0.78rem; flex-shrink: 0; }
+
+    .cc-preview-strip {
+      display: flex;
+      gap: 2px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-bottom: 0.8rem;
+    }
+    .cc-preview-strip div {
+      flex: 1;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .cc-sim-section { margin-bottom: 1.2rem; }
+    .cc-sim-section h3 { font-size: 0.95rem; margin-bottom: 0.4rem; }
+
+    .cc-contrast-grid {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      margin-bottom: 1rem;
+    }
+    .cc-contrast-grid th, .cc-contrast-grid td {
+      padding: 0.35rem 0.5rem;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .cc-contrast-grid th {
+      background: var(--bg-elev-2);
+      font-weight: 600;
+    }
+    .cc-pass { color: var(--accent-2); font-weight: 700; }
+    .cc-fail { color: var(--danger); }
+
+    .cc-fig-preview {
+      border-radius: var(--radius-sm);
+      padding: 1.2rem;
+      margin-bottom: 0.8rem;
+    }
+    .cc-fig-preview svg { width: 100%; height: auto; }
+
+    .cc-legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; font-size: 0.82rem; }
+    .cc-legend span { display: flex; align-items: center; gap: 0.3rem; }
+    .cc-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🎨 Color Palette Checker</h1>
+      <p>
+        Pick colors for your figures, check WCAG contrast ratios, and preview how
+        they appear under different types of color-vision deficiency. Everything
+        runs locally in your browser.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Palette</h2>
+          <div id="cc-swatch-list"></div>
+          <button id="cc-add-btn" class="btn" type="button" style="width:100%;margin-top:0.4rem">+ Add color</button>
+        </div>
+
+        <div class="panel">
+          <h2>Background</h2>
+          <div class="field">
+            <label>Figure background</label>
+            <div style="display:flex;gap:0.5rem">
+              <button class="btn cc-bg-btn" data-bg="#ffffff" type="button" style="flex:1">White</button>
+              <button class="btn cc-bg-btn" data-bg="#000000" type="button" style="flex:1">Black</button>
+              <button class="btn cc-bg-btn" data-bg="#f5f5f5" type="button" style="flex:1">Light grey</button>
+              <input id="cc-bg-picker" type="color" value="#ffffff" style="width:36px;height:36px" />
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Options</h2>
+          <label class="checkbox-row">
+            <input type="checkbox" id="cc-show-labels" checked /> Show color labels
+          </label>
+        </div>
+      </aside>
+
+      <section>
+        <div class="panel">
+          <h2>Normal vision</h2>
+          <div id="cc-preview-normal" class="cc-preview-strip"></div>
+          <div id="cc-fig-normal" class="cc-fig-preview"></div>
+        </div>
+
+        <div class="cc-sim-section panel">
+          <h2>Colorblind simulation</h2>
+          <h3>Protanopia (no red cones, ~1% of males)</h3>
+          <div id="cc-preview-protan" class="cc-preview-strip"></div>
+          <div id="cc-fig-protan" class="cc-fig-preview"></div>
+
+          <h3>Deuteranopia (no green cones, ~5% of males)</h3>
+          <div id="cc-preview-deutan" class="cc-preview-strip"></div>
+          <div id="cc-fig-deutan" class="cc-fig-preview"></div>
+
+          <h3>Tritanopia (no blue cones, ~0.003%)</h3>
+          <div id="cc-preview-tritan" class="cc-preview-strip"></div>
+          <div id="cc-fig-tritan" class="cc-fig-preview"></div>
+
+          <h3>Achromatopsia (monochromacy)</h3>
+          <div id="cc-preview-achrom" class="cc-preview-strip"></div>
+          <div id="cc-fig-achrom" class="cc-fig-preview"></div>
+        </div>
+
+        <div class="panel">
+          <h2>WCAG Contrast ratios</h2>
+          <p style="font-size:0.82rem">
+            Ratio of each color pair against the chosen background.
+            AA requires ≥ 4.5:1 for normal text, ≥ 3:1 for large text / UI.
+            AAA requires ≥ 7:1 / ≥ 4.5:1.
+          </p>
+          <div style="overflow-x:auto">
+            <table id="cc-contrast-table" class="cc-contrast-grid"></table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Pair distinguishability</h2>
+          <p style="font-size:0.82rem">
+            Minimum contrast between any two palette colors — important for
+            distinguishing data series in a chart. Pairs with ratio &lt; 3:1 may be
+            confused.
+          </p>
+          <div style="overflow-x:auto">
+            <table id="cc-pair-table" class="cc-contrast-grid"></table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+  <script type="module" src="/src/tools/colorChecker.js"></script>
+</body>
+</html>

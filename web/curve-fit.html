@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Curve Fitting — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    #cf-model-params {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .cf-param-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .cf-param-row label {
+      flex: 0 0 120px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cf-param-row input {
+      flex: 1;
+      min-width: 0;
+    }
+    #cf-results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin-top: 0.75rem;
+    }
+    #cf-results-table th,
+    #cf-results-table td {
+      padding: 0.4rem 0.6rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    #cf-results-table th {
+      color: var(--text-dim);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    #cf-results-table td {
+      font-family: var(--font-mono);
+      font-size: 0.83rem;
+    }
+    .cf-gof {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem 1.5rem;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+    }
+    .cf-gof dt { color: var(--text-dim); }
+    .cf-gof dd {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.83rem;
+    }
+    .cf-eq {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.75rem;
+      margin-top: 0.5rem;
+      word-break: break-all;
+    }
+    #cf-paste-area {
+      width: 100%;
+      min-height: 100px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem;
+      resize: vertical;
+    }
+    .cf-or-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      margin: 0.5rem 0;
+    }
+    .cf-or-divider::before,
+    .cf-or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .cf-hint {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin: 0.25rem 0 0;
+    }
+    .cf-downloads {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .cf-downloads .btn { font-size: 0.82rem; padding: 0.35rem 0.7rem; }
+    #cf-degree-wrap { display: none; }
+    .cf-residual-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .cf-residual-toggle input { accent-color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>📐 Curve Fitting</h1>
+      <p>
+        Upload or paste X,Y data, choose a model, and get fitted parameters with
+        uncertainties. Supports linear, polynomial, exponential, Gaussian, power-law,
+        logarithmic and Arrhenius models.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <!-- Data input -->
+        <div class="panel">
+          <h2>Data</h2>
+          <div class="dropzone" id="cf-dropzone">
+            <input type="file" id="cf-file-input" accept=".csv,.txt,.asc,.tsv,.xlsx,.xls" />
+            <div>📄 Click or drop a CSV / TXT / XLSX file</div>
+          </div>
+          <div class="cf-or-divider">or paste data</div>
+          <textarea id="cf-paste-area" placeholder="x,y&#10;1,2.3&#10;2,4.1&#10;3,6.7&#10;..."></textarea>
+          <button class="btn" id="cf-parse-paste-btn" style="margin-top:0.4rem; width:100%">Parse pasted data</button>
+          <div id="cf-data-status"></div>
+        </div>
+
+        <!-- Column selection -->
+        <div class="panel" id="cf-col-panel" style="display:none">
+          <h2>Columns</h2>
+          <div class="field">
+            <label for="cf-x-col">X column</label>
+            <select id="cf-x-col"></select>
+          </div>
+          <div class="field">
+            <label for="cf-y-col">Y column</label>
+            <select id="cf-y-col"></select>
+          </div>
+          <p class="cf-hint" id="cf-row-count"></p>
+        </div>
+
+        <!-- Model selection -->
+        <div class="panel" id="cf-model-panel" style="display:none">
+          <h2>Model</h2>
+          <div class="field">
+            <label for="cf-model">Function</label>
+            <select id="cf-model">
+              <option value="linear">Linear: y = a·x + b</option>
+              <option value="polynomial">Polynomial: y = Σ aₙ·xⁿ</option>
+              <option value="exp-growth">Exponential growth: y = a·exp(b·x)</option>
+              <option value="exp-decay">Exponential decay: y = a·exp(−b·x) + c</option>
+              <option value="gaussian">Gaussian: y = a·exp(−(x−b)²/(2c²))</option>
+              <option value="power">Power law: y = a·xᵇ</option>
+              <option value="logarithmic">Logarithmic: y = a·ln(x) + b</option>
+              <option value="arrhenius">Arrhenius: k = A·exp(−Eₐ/(R·T))</option>
+            </select>
+          </div>
+          <div class="field" id="cf-degree-wrap">
+            <label for="cf-degree">Polynomial degree</label>
+            <select id="cf-degree">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </div>
+
+          <h3 style="margin-top:0.75rem; font-size:0.9rem;">Initial guesses</h3>
+          <div id="cf-model-params"></div>
+          <p class="cf-hint">Auto-estimated from data. Edit to improve convergence.</p>
+
+          <button class="btn btn-primary" id="cf-fit-btn" style="margin-top:0.75rem; width:100%">
+            Fit curve
+          </button>
+        </div>
+
+        <!-- Results -->
+        <div class="panel" id="cf-results-panel" style="display:none">
+          <h2>Results</h2>
+          <div class="cf-eq" id="cf-equation"></div>
+          <table id="cf-results-table">
+            <thead>
+              <tr><th>Parameter</th><th>Value</th><th>Std Error</th></tr>
+            </thead>
+            <tbody id="cf-results-tbody"></tbody>
+          </table>
+          <dl class="cf-gof" id="cf-gof"></dl>
+          <div class="cf-downloads">
+            <button class="btn" id="cf-dl-curve">⬇ Fitted curve CSV</button>
+            <button class="btn" id="cf-dl-residuals">⬇ Residuals CSV</button>
+            <button class="btn" id="cf-dl-summary">⬇ Summary TXT</button>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div id="cf-plot" style="width:100%; min-height:450px;">
+          <div class="empty-state">Upload or paste data to get started.</div>
+        </div>
+        <div class="cf-residual-toggle" id="cf-residual-toggle" style="display:none">
+          <input type="checkbox" id="cf-show-residuals" />
+          <label for="cf-show-residuals">Show residuals subplot</label>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/curveFit.js"></script>
+</body>
+</html>

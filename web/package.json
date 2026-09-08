@@ -12,6 +12,7 @@
     "@imgly/background-removal": "^1.5.9",
     "jszip": "^3.10.1",
     "mammoth": "^1.8.0",
+    "ml-levenberg-marquardt": "^5.1.0",
     "papaparse": "^5.4.1",
     "pdfjs-dist": "^4.7.76",
     "plotly.js-dist-min": "^2.34.0",

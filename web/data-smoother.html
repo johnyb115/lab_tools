@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Smoother — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    #ds-paste {
+      resize: vertical;
+      min-height: 4rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.82rem;
+    }
+    .ds-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .ds-slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+    }
+    .ds-slider-val {
+      min-width: 3.2rem;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .ds-caption {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin: 0.35rem 0 0;
+    }
+    #ds-status .alert {
+      margin-top: 0.5rem;
+    }
+    .ds-export-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>〰️ Data Smoother</h1>
+      <p>
+        Upload noisy X,Y data and apply smoothing filters interactively.
+        Compare the original and smoothed traces side-by-side, tweak parameters
+        in real time, and download the result as CSV.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Data Input</h2>
+          <div class="dropzone" id="ds-dropzone">
+            <input type="file" id="ds-file-input" accept=".csv,.txt,.tsv,.asc" />
+            <div>📄 Click or drop a CSV / TXT file</div>
+          </div>
+          <div class="field">
+            <label for="ds-paste">Or paste data</label>
+            <textarea id="ds-paste" rows="5" placeholder="x,y&#10;1,2.3&#10;2,4.1&#10;3,3.8&#10;..."></textarea>
+          </div>
+          <button type="button" class="btn" id="ds-load-paste">Load pasted data</button>
+          <div id="ds-status"></div>
+        </div>
+
+        <div class="panel" id="ds-col-panel" style="display: none">
+          <h2>Columns</h2>
+          <div class="field">
+            <label for="ds-x-col">X column</label>
+            <select id="ds-x-col"></select>
+          </div>
+          <div class="field">
+            <label for="ds-y-col">Y column</label>
+            <select id="ds-y-col"></select>
+          </div>
+        </div>
+
+        <div class="panel" id="ds-filter-panel" style="display: none">
+          <h2>Smoothing Filter</h2>
+          <div class="field">
+            <label for="ds-filter-type">Filter type</label>
+            <select id="ds-filter-type">
+              <option value="moving-avg">Moving Average</option>
+              <option value="savitzky-golay">Savitzky–Golay</option>
+              <option value="gaussian">Gaussian</option>
+              <option value="median">Median</option>
+              <option value="ema">Exponential Moving Average</option>
+            </select>
+          </div>
+
+          <div id="ds-params-moving-avg">
+            <div class="field">
+              <label>Window size</label>
+              <div class="ds-slider-row">
+                <input type="range" id="ds-ma-win" min="3" max="101" step="2" value="5" />
+                <span class="ds-slider-val" id="ds-ma-win-val">5</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="ds-params-savitzky-golay" hidden>
+            <div class="field">
+              <label>Window size</label>
+              <div class="ds-slider-row">
+                <input type="range" id="ds-sg-win" min="5" max="101" step="2" value="7" />
+                <span class="ds-slider-val" id="ds-sg-win-val">7</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Polynomial order</label>
+              <div class="ds-slider-row">
+                <input type="range" id="ds-sg-ord" min="2" max="5" step="1" value="2" />
+                <span class="ds-slider-val" id="ds-sg-ord-val">2</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="ds-params-gaussian" hidden>
+            <div class="field">
+              <label>Sigma (σ)</label>
+              <div class="ds-slider-row">
+                <input type="range" id="ds-gauss-sigma" min="0.5" max="20" step="0.5" value="2" />
+                <span class="ds-slider-val" id="ds-gauss-sigma-val">2.0</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="ds-params-median" hidden>
+            <div class="field">
+              <label>Window size</label>
+              <div class="ds-slider-row">
+                <input type="range" id="ds-med-win" min="3" max="51" step="2" value="5" />
+                <span class="ds-slider-val" id="ds-med-win-val">5</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="ds-params-ema" hidden>
+            <div class="field">
+              <label>Alpha (α)</label>
+              <div class="ds-slider-row">
+                <input type="range" id="ds-ema-alpha" min="0.01" max="1" step="0.01" value="0.30" />
+                <span class="ds-slider-val" id="ds-ema-alpha-val">0.30</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="sep" />
+          <div class="checkbox-row">
+            <input type="checkbox" id="ds-show-original" checked />
+            <label for="ds-show-original" style="margin: 0">Show original data</label>
+          </div>
+        </div>
+
+        <div class="panel" id="ds-export-panel" style="display: none">
+          <h2>Export</h2>
+          <div class="ds-export-btns">
+            <button type="button" class="btn btn-primary" id="ds-dl-smoothed">⬇ Download smoothed CSV</button>
+            <button type="button" class="btn" id="ds-dl-both">⬇ Download original + smoothed CSV</button>
+          </div>
+          <p class="ds-caption">
+            To save a PNG of the plot, use the camera icon in the Plotly toolbar (top-right of the chart).
+          </p>
+        </div>
+      </aside>
+
+      <section>
+        <div id="ds-plot" class="plot-area">
+          <div class="empty-state">Upload or paste X,Y data to get started.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/dataSmoother.js"></script>
+</body>
+</html>

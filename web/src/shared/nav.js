@@ -20,6 +20,11 @@ export const NAV_ITEMS = [
   // { id: 'word-to-pdf', label: 'Word → High-Quality PDF', href: './word-to-pdf.html', icon: '📝' },
   { id: 'pdf-image-extractor', label: 'PDF Image Extractor', href: './pdf-image-extractor.html', icon: '📤' },
   { id: 'pcb-qr', label: 'PCB QR Generator', href: './pcb-qr.html', icon: '🔲' },
+  { id: 'figure-composer', label: 'Figure Panel Composer', href: './figure-composer.html', icon: '🖼️' },
+  { id: 'curve-fit', label: 'Curve Fitting', href: './curve-fit.html', icon: '📐' },
+  { id: 'data-smoother', label: 'Data Smoother', href: './data-smoother.html', icon: '〰️' },
+  { id: 'color-checker', label: 'Color Palette Checker', href: './color-checker.html', icon: '🎨' },
+  { id: 'unit-converter', label: 'Lab Unit Converter', href: './unit-converter.html', icon: '🔬' },
 ]
 
 export function initChrome(activeId) {

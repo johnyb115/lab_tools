@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Figure Panel Composer — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <style>
+    #fc-image-list {
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0 0;
+    }
+    #fc-image-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.5rem;
+      background: var(--bg-elev-2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.3rem;
+      font-size: 0.85rem;
+    }
+    #fc-image-list li .fc-thumb {
+      width: 32px;
+      height: 32px;
+      object-fit: cover;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    #fc-image-list li .fc-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text);
+    }
+    #fc-image-list li button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.1rem 0.3rem;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      border-radius: 3px;
+    }
+    #fc-image-list li button:hover {
+      background: var(--bg-elev);
+      color: var(--text);
+    }
+    #fc-image-list li .fc-remove-btn:hover {
+      color: var(--danger);
+    }
+
+    .fc-grid-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-bottom: 0.5rem;
+    }
+    .fc-grid-presets button {
+      background: var(--bg-elev-2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: var(--radius-sm);
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+      font-size: 0.78rem;
+    }
+    .fc-grid-presets button:hover,
+    .fc-grid-presets button.is-active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .fc-custom-grid {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+    }
+    .fc-custom-grid input {
+      width: 3.5rem;
+    }
+    .fc-custom-grid span {
+      color: var(--text-dim);
+    }
+
+    .fc-color-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .fc-color-row input[type="color"] {
+      width: 36px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .fc-color-row input[type="text"] {
+      flex: 1;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    .fc-canvas-wrap {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 300px;
+    }
+    #fc-canvas {
+      max-width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .fc-export-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🖼️ Figure Panel Composer</h1>
+      <p>
+        Arrange multiple images into a publication-ready figure panel with labels.
+        Everything runs locally in your browser — nothing is uploaded.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Images</h2>
+          <div id="fc-dropzone" class="dropzone">
+            <input id="fc-file-input" type="file" accept="image/*" multiple />
+            <p>📤 Click or drag images here (PNG, JPG, ...) — multiple files supported</p>
+          </div>
+          <ul id="fc-image-list"></ul>
+          <button id="fc-clear-btn" class="btn btn-danger" style="margin-top:0.4rem" hidden>Clear all</button>
+        </div>
+
+        <div class="panel">
+          <h2>Grid Layout</h2>
+          <div class="fc-grid-presets" id="fc-grid-presets">
+            <button data-r="1" data-c="1">1×1</button>
+            <button data-r="1" data-c="2">1×2</button>
+            <button data-r="2" data-c="1">2×1</button>
+            <button data-r="1" data-c="3">1×3</button>
+            <button data-r="3" data-c="1">3×1</button>
+            <button data-r="2" data-c="2" class="is-active">2×2</button>
+            <button data-r="2" data-c="3">2×3</button>
+            <button data-r="3" data-c="2">3×2</button>
+            <button data-r="3" data-c="3">3×3</button>
+          </div>
+          <div class="fc-custom-grid">
+            <input type="number" id="fc-rows" min="1" max="10" value="2" />
+            <span>×</span>
+            <input type="number" id="fc-cols" min="1" max="10" value="2" />
+            <span class="fc-dim-label">rows × cols</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Labels</h2>
+          <div class="field">
+            <label for="fc-label-style">Style</label>
+            <select id="fc-label-style">
+              <option value="lower">(a), (b), (c)</option>
+              <option value="upper">A, B, C</option>
+              <option value="number">1, 2, 3</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fc-label-pos">Position</label>
+            <select id="fc-label-pos">
+              <option value="top-left">Top-left</option>
+              <option value="top-right">Top-right</option>
+              <option value="bottom-left">Bottom-left</option>
+              <option value="bottom-right">Bottom-right</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fc-label-size">Font size: <span id="fc-label-size-val">24</span>px</label>
+            <input type="range" id="fc-label-size" min="12" max="48" value="24" />
+          </div>
+          <div class="field">
+            <label>Label color</label>
+            <div class="fc-color-row">
+              <input type="color" id="fc-label-color" value="#ffffff" />
+              <input type="text" id="fc-label-color-text" value="#ffffff" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="fc-label-bg">Label background</label>
+            <select id="fc-label-bg">
+              <option value="none">None</option>
+              <option value="semi" selected>Semi-transparent black</option>
+              <option value="solid">Solid black</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Appearance</h2>
+          <div class="field">
+            <label for="fc-gap">Gap: <span id="fc-gap-val">4</span>px</label>
+            <input type="range" id="fc-gap" min="0" max="20" value="4" />
+          </div>
+          <div class="field">
+            <label for="fc-border">Panel border</label>
+            <select id="fc-border">
+              <option value="none">None</option>
+              <option value="thin">Thin (1px)</option>
+              <option value="medium">Medium (2px)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fc-bg-color">Background</label>
+            <select id="fc-bg-color">
+              <option value="#ffffff" selected>White</option>
+              <option value="#000000">Black</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Export</h2>
+          <div class="fc-export-row">
+            <button id="fc-export-png" class="btn btn-primary" disabled>Export PNG</button>
+            <button id="fc-export-svg" class="btn" disabled>Export SVG</button>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div id="fc-output">
+          <div class="empty-state">Upload images and adjust settings to compose a figure panel.</div>
+          <div class="fc-canvas-wrap" hidden>
+            <canvas id="fc-canvas"></canvas>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/figureComposer.js"></script>
+</body>
+</html>
