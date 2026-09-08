@@ -99,16 +99,19 @@ function renderSwatchList() {
     const row = document.createElement('div')
     row.className = 'cc-swatch-row'
 
+    const colorWrap = document.createElement('div')
+    colorWrap.className = 'cc-color-wrap'
     const picker = document.createElement('input')
     picker.type = 'color'
     picker.value = hex
+    colorWrap.appendChild(picker)
 
     const text = document.createElement('input')
     text.type = 'text'
     text.value = hex
 
     const removeBtn = document.createElement('button')
-    removeBtn.className = 'btn btn-danger'
+    removeBtn.className = 'cc-remove'
     removeBtn.textContent = '×'
     removeBtn.addEventListener('click', () => { palette.splice(i, 1); update() })
 
@@ -119,7 +122,7 @@ function renderSwatchList() {
       else text.value = palette[i]
     })
 
-    row.append(picker, text, removeBtn)
+    row.append(colorWrap, text, removeBtn)
     swatchList.appendChild(row)
   })
 }

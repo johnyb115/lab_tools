@@ -38,6 +38,7 @@ const labelColor = $('fc-label-color')
 const labelColorText = $('fc-label-color-text')
 const labelBg = $('fc-label-bg')
 
+const pageWidthInput = $('fc-page-width')
 const gapSlider = $('fc-gap')
 const gapVal = $('fc-gap-val')
 const borderSelect = $('fc-border')
@@ -155,6 +156,7 @@ labelColorText.addEventListener('input', () => {
 ;[labelStyle, labelPos, labelBg, borderSelect, bgColorSelect].forEach(
   (el) => el.addEventListener('change', render)
 )
+pageWidthInput.addEventListener('change', render)
 
 function getSettings() {
   return {
@@ -287,16 +289,22 @@ function computeExportSize(settings) {
   const count = Math.min(state.images.length, rows * cols)
   if (count === 0) return { w: 800, h: 600 }
 
-  let maxW = 0, maxH = 0
+  const pageWidthCm = parseFloat(pageWidthInput.value) || 16
+  const DPI = 300
+  const w = Math.round(pageWidthCm / 2.54 * DPI)
+
+  const totalGapX = gap * (cols - 1)
+  const cellW = (w - totalGapX) / cols
+
+  let maxAspect = 1
   for (let i = 0; i < count; i++) {
     const { img } = state.images[i]
-    maxW = Math.max(maxW, img.naturalWidth)
-    maxH = Math.max(maxH, img.naturalHeight)
+    const a = img.naturalHeight / img.naturalWidth
+    if (a > maxAspect) maxAspect = a
   }
-
-  const w = maxW * cols + gap * (cols - 1)
-  const h = maxH * rows + gap * (rows - 1)
-  return { w, h, cellW: maxW, cellH: maxH }
+  const cellH = cellW * maxAspect
+  const h = Math.round(cellH * rows + gap * (rows - 1))
+  return { w, h, cellW, cellH }
 }
 
 exportPng.addEventListener('click', () => {
@@ -383,21 +391,32 @@ exportPptx.addEventListener('click', async () => {
   const { rows, cols, gap, bgColor, borderStyle, labelStyleVal, labelPosVal, labelSizePx, labelColorVal, labelBgVal } = settings
 
   const pres = new PptxGenJS()
-  const slide = pres.addSlide()
 
-  const slideW = 10    // inches
-  const slideH = 7.5   // inches
-  const dpi = 96
-  const gapIn = gap / dpi
-
-  // Strip '#' prefix for pptxgenjs color values
-  const bgHex = bgColor.replace(/^#/, '')
-  slide.background = { fill: bgHex }
+  const pageWidthCm = parseFloat(pageWidthInput.value) || 16
+  const DPI = 300
+  const slideW = pageWidthCm / 2.54
+  const gapIn = gap / DPI
 
   const totalGapX = gapIn * (cols - 1)
-  const totalGapY = gapIn * (rows - 1)
   const cellW = (slideW - totalGapX) / cols
-  const cellH = (slideH - totalGapY) / rows
+
+  const count = Math.min(state.images.length, rows * cols)
+  let maxAspect = 1
+  for (let i = 0; i < count; i++) {
+    const { img } = state.images[i]
+    const a = img.naturalHeight / img.naturalWidth
+    if (a > maxAspect) maxAspect = a
+  }
+  const cellH = cellW * maxAspect
+  const slideH = cellH * rows + gapIn * (rows - 1)
+
+  pres.defineLayout({ name: 'CUSTOM', width: slideW, height: slideH })
+  pres.layout = 'CUSTOM'
+
+  const slide = pres.addSlide()
+
+  const bgHex = bgColor.replace(/^#/, '')
+  slide.background = { fill: bgHex }
 
   const borderW = borderStyle === 'thin' ? 1 : borderStyle === 'medium' ? 2 : 0
 
@@ -431,10 +450,10 @@ exportPptx.addEventListener('click', async () => {
 
       const labelText = getLabelText(idx, labelStyleVal)
       if (labelText && idx < state.images.length) {
-        const padIn = labelSizePx * 0.4 / dpi
-        const fontPt = Math.round(labelSizePx * 0.75)   // px to pt approximation
-        const textBoxW = labelSizePx * labelText.length * 0.65 / dpi + padIn * 2
-        const textBoxH = labelSizePx / dpi + padIn * 2
+        const padIn = labelSizePx * 0.4 / DPI
+        const fontPt = Math.round(labelSizePx * 0.75)
+        const textBoxW = labelSizePx * labelText.length * 0.65 / DPI + padIn * 2
+        const textBoxH = labelSizePx / DPI + padIn * 2
 
         let lx, ly
         if (labelPosVal.endsWith('left')) lx = cx + padIn - padIn * 0.5

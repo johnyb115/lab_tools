@@ -10,15 +10,26 @@
     .cc-swatch-row {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.4rem;
+      gap: 0.4rem;
+      padding: 0.35rem;
       border-radius: var(--radius-sm);
       background: var(--bg-elev-2);
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.35rem;
+      overflow: hidden;
     }
-    .cc-swatch-row input[type="color"] { width: 32px; height: 32px; flex-shrink: 0; padding: 0; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
-    .cc-swatch-row input[type="text"] { flex: 1; min-width: 60px; font-family: var(--font-mono); font-size: 0.82rem; }
-    .cc-swatch-row .btn { padding: 0.3rem 0.5rem; font-size: 0.78rem; flex-shrink: 0; }
+    .cc-color-wrap {
+      width: 28px; height: 28px; flex: 0 0 28px;
+      border-radius: 4px; overflow: hidden; position: relative;
+      border: 1px solid var(--border);
+    }
+    .cc-color-wrap input[type="color"] {
+      position: absolute; inset: -4px;
+      width: calc(100% + 8px); height: calc(100% + 8px);
+      padding: 0; border: none; cursor: pointer;
+    }
+    .cc-swatch-row input[type="text"] { flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 0.82rem; }
+    .cc-swatch-row .cc-remove { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; padding: 0 0.2rem; flex-shrink: 0; line-height: 1; }
+    .cc-swatch-row .cc-remove:hover { color: var(--danger); }
 
     .cc-preview-strip {
       display: flex;
