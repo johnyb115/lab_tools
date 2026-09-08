@@ -16,8 +16,8 @@
       background: var(--bg-elev-2);
       margin-bottom: 0.4rem;
     }
-    .cc-swatch-row input[type="color"] { width: 36px; height: 36px; flex-shrink: 0; }
-    .cc-swatch-row input[type="text"] { flex: 1; min-width: 0; }
+    .cc-swatch-row input[type="color"] { width: 32px; height: 32px; flex-shrink: 0; padding: 0; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; }
+    .cc-swatch-row input[type="text"] { flex: 1; min-width: 60px; font-family: var(--font-mono); font-size: 0.82rem; }
     .cc-swatch-row .btn { padding: 0.3rem 0.5rem; font-size: 0.78rem; flex-shrink: 0; }
 
     .cc-preview-strip {
@@ -39,6 +39,24 @@
 
     .cc-sim-section { margin-bottom: 1.2rem; }
     .cc-sim-section h3 { font-size: 0.95rem; margin-bottom: 0.4rem; }
+
+    .cc-collapsible { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .cc-collapsible summary {
+      cursor: pointer;
+      padding: 0.7rem 1rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+      background: var(--bg-elev);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      user-select: none;
+    }
+    .cc-collapsible summary::-webkit-details-marker { display: none; }
+    .cc-collapsible summary::before { content: '▸'; transition: transform 0.15s; display: inline-block; }
+    .cc-collapsible[open] summary::before { transform: rotate(90deg); }
+    .cc-collapsible .cc-collapsible-body { padding: 1rem; }
 
     .cc-contrast-grid {
       width: 100%;
@@ -98,7 +116,7 @@
             <div style="display:flex;gap:0.5rem">
               <button class="btn cc-bg-btn" data-bg="#ffffff" type="button" style="flex:1">White</button>
               <button class="btn cc-bg-btn" data-bg="#000000" type="button" style="flex:1">Black</button>
-              <button class="btn cc-bg-btn" data-bg="#f5f5f5" type="button" style="flex:1">Light grey</button>
+              <button class="btn cc-bg-btn" data-bg="#d0d0d0" type="button" style="flex:1">Light grey</button>
               <input id="cc-bg-picker" type="color" value="#ffffff" style="width:36px;height:36px" />
             </div>
           </div>
@@ -119,48 +137,54 @@
           <div id="cc-fig-normal" class="cc-fig-preview"></div>
         </div>
 
-        <div class="cc-sim-section panel">
-          <h2>Colorblind simulation</h2>
-          <h3>Protanopia (no red cones, ~1% of males)</h3>
-          <div id="cc-preview-protan" class="cc-preview-strip"></div>
-          <div id="cc-fig-protan" class="cc-fig-preview"></div>
+        <details class="cc-collapsible" open>
+          <summary>Colorblind simulation</summary>
+          <div class="cc-collapsible-body">
+            <h3>Protanopia (no red cones, ~1% of males)</h3>
+            <div id="cc-preview-protan" class="cc-preview-strip"></div>
+            <div id="cc-fig-protan" class="cc-fig-preview"></div>
 
-          <h3>Deuteranopia (no green cones, ~5% of males)</h3>
-          <div id="cc-preview-deutan" class="cc-preview-strip"></div>
-          <div id="cc-fig-deutan" class="cc-fig-preview"></div>
+            <h3>Deuteranopia (no green cones, ~5% of males)</h3>
+            <div id="cc-preview-deutan" class="cc-preview-strip"></div>
+            <div id="cc-fig-deutan" class="cc-fig-preview"></div>
 
-          <h3>Tritanopia (no blue cones, ~0.003%)</h3>
-          <div id="cc-preview-tritan" class="cc-preview-strip"></div>
-          <div id="cc-fig-tritan" class="cc-fig-preview"></div>
+            <h3>Tritanopia (no blue cones, ~0.003%)</h3>
+            <div id="cc-preview-tritan" class="cc-preview-strip"></div>
+            <div id="cc-fig-tritan" class="cc-fig-preview"></div>
 
-          <h3>Achromatopsia (monochromacy)</h3>
-          <div id="cc-preview-achrom" class="cc-preview-strip"></div>
-          <div id="cc-fig-achrom" class="cc-fig-preview"></div>
-        </div>
-
-        <div class="panel">
-          <h2>WCAG Contrast ratios</h2>
-          <p style="font-size:0.82rem">
-            Ratio of each color pair against the chosen background.
-            AA requires ≥ 4.5:1 for normal text, ≥ 3:1 for large text / UI.
-            AAA requires ≥ 7:1 / ≥ 4.5:1.
-          </p>
-          <div style="overflow-x:auto">
-            <table id="cc-contrast-table" class="cc-contrast-grid"></table>
+            <h3>Achromatopsia (monochromacy)</h3>
+            <div id="cc-preview-achrom" class="cc-preview-strip"></div>
+            <div id="cc-fig-achrom" class="cc-fig-preview"></div>
           </div>
-        </div>
+        </details>
 
-        <div class="panel">
-          <h2>Pair distinguishability</h2>
-          <p style="font-size:0.82rem">
-            Minimum contrast between any two palette colors — important for
-            distinguishing data series in a chart. Pairs with ratio &lt; 3:1 may be
-            confused.
-          </p>
-          <div style="overflow-x:auto">
-            <table id="cc-pair-table" class="cc-contrast-grid"></table>
+        <details class="cc-collapsible">
+          <summary>WCAG Contrast ratios</summary>
+          <div class="cc-collapsible-body">
+            <p style="font-size:0.82rem">
+              Ratio of each color pair against the chosen background.
+              AA requires ≥ 4.5:1 for normal text, ≥ 3:1 for large text / UI.
+              AAA requires ≥ 7:1 / ≥ 4.5:1.
+            </p>
+            <div style="overflow-x:auto">
+              <table id="cc-contrast-table" class="cc-contrast-grid"></table>
+            </div>
           </div>
-        </div>
+        </details>
+
+        <details class="cc-collapsible">
+          <summary>Pair distinguishability</summary>
+          <div class="cc-collapsible-body">
+            <p style="font-size:0.82rem">
+              Minimum contrast between any two palette colors — important for
+              distinguishing data series in a chart. Pairs with ratio &lt; 3:1 may be
+              confused.
+            </p>
+            <div style="overflow-x:auto">
+              <table id="cc-pair-table" class="cc-contrast-grid"></table>
+            </div>
+          </div>
+        </details>
       </section>
     </div>
   </main>

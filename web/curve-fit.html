@@ -152,6 +152,18 @@
           <div class="cf-or-divider">or paste data</div>
           <textarea id="cf-paste-area" placeholder="x,y&#10;1,2.3&#10;2,4.1&#10;3,6.7&#10;..."></textarea>
           <button class="btn" id="cf-parse-paste-btn" style="margin-top:0.4rem; width:100%">Parse pasted data</button>
+          <div class="cf-or-divider">or load an example</div>
+          <select id="cf-example-select" style="width:100%">
+            <option value="">Select an example dataset...</option>
+            <option value="linear">Linear — Ohm's law (V vs I)</option>
+            <option value="polynomial">Polynomial — projectile trajectory</option>
+            <option value="exp-growth">Exponential growth — bacterial population</option>
+            <option value="exp-decay">Exponential decay — capacitor discharge</option>
+            <option value="gaussian">Gaussian — spectral emission peak</option>
+            <option value="power">Power law — allometric scaling</option>
+            <option value="logarithmic">Logarithmic — sensor response</option>
+            <option value="arrhenius">Arrhenius — reaction rate vs temperature</option>
+          </select>
           <div id="cf-data-status"></div>
         </div>
 

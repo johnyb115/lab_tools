@@ -1,6 +1,7 @@
 import { initChrome } from '../shared/nav.js'
 import { initDropzone } from '../shared/dropzone.js'
 import { downloadBlob } from '../shared/download.js'
+import PptxGenJS from 'pptxgenjs'
 
 initChrome('figure-composer')
 
@@ -23,6 +24,7 @@ const emptyState = outputWrap.querySelector('.empty-state')
 const canvasWrap = outputWrap.querySelector('.fc-canvas-wrap')
 const exportPng = $('fc-export-png')
 const exportSvg = $('fc-export-svg')
+const exportPptx = $('fc-export-pptx')
 
 const gridPresets = $('fc-grid-presets')
 const rowsInput = $('fc-rows')
@@ -101,6 +103,7 @@ function renderImageList() {
   const hasImages = state.images.length > 0
   exportPng.disabled = !hasImages
   exportSvg.disabled = !hasImages
+  exportPptx.disabled = !hasImages
 }
 
 function swap(a, b) {
@@ -372,6 +375,102 @@ exportSvg.addEventListener('click', async () => {
   parts.push('</svg>')
   const blob = new Blob([parts.join('\n')], { type: 'image/svg+xml' })
   downloadBlob(blob, 'figure-panel.svg')
+})
+
+exportPptx.addEventListener('click', async () => {
+  if (state.images.length === 0) return
+  const settings = getSettings()
+  const { rows, cols, gap, bgColor, borderStyle, labelStyleVal, labelPosVal, labelSizePx, labelColorVal, labelBgVal } = settings
+
+  const pres = new PptxGenJS()
+  const slide = pres.addSlide()
+
+  const slideW = 10    // inches
+  const slideH = 7.5   // inches
+  const dpi = 96
+  const gapIn = gap / dpi
+
+  // Strip '#' prefix for pptxgenjs color values
+  const bgHex = bgColor.replace(/^#/, '')
+  slide.background = { fill: bgHex }
+
+  const totalGapX = gapIn * (cols - 1)
+  const totalGapY = gapIn * (rows - 1)
+  const cellW = (slideW - totalGapX) / cols
+  const cellH = (slideH - totalGapY) / rows
+
+  const borderW = borderStyle === 'thin' ? 1 : borderStyle === 'medium' ? 2 : 0
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c
+      const cx = c * (cellW + gapIn)
+      const cy = r * (cellH + gapIn)
+
+      if (borderW > 0) {
+        const strokeColor = bgColor === '#000000' ? 'FFFFFF' : '000000'
+        slide.addShape(pres.ShapeType.rect, {
+          x: cx, y: cy, w: cellW, h: cellH,
+          fill: { type: 'none' },
+          line: { color: strokeColor, width: borderW },
+        })
+      }
+
+      if (idx < state.images.length) {
+        const { img } = state.images[idx]
+        const fit = fitImage(img.naturalWidth, img.naturalHeight, cellW, cellH)
+        const dataUrl = imgToDataUrl(img)
+        slide.addImage({
+          data: dataUrl,
+          x: cx + fit.x,
+          y: cy + fit.y,
+          w: fit.w,
+          h: fit.h,
+        })
+      }
+
+      const labelText = getLabelText(idx, labelStyleVal)
+      if (labelText && idx < state.images.length) {
+        const padIn = labelSizePx * 0.4 / dpi
+        const fontPt = Math.round(labelSizePx * 0.75)   // px to pt approximation
+        const textBoxW = labelSizePx * labelText.length * 0.65 / dpi + padIn * 2
+        const textBoxH = labelSizePx / dpi + padIn * 2
+
+        let lx, ly
+        if (labelPosVal.endsWith('left')) lx = cx + padIn - padIn * 0.5
+        else lx = cx + cellW - textBoxW - padIn + padIn * 0.5
+
+        if (labelPosVal.startsWith('top')) ly = cy + padIn - padIn * 0.5
+        else ly = cy + cellH - textBoxH - padIn + padIn * 0.5
+
+        const labelHex = labelColorVal.replace(/^#/, '')
+
+        const textOpts = {
+          x: lx,
+          y: ly,
+          w: textBoxW,
+          h: textBoxH,
+          fontSize: fontPt,
+          color: labelHex,
+          bold: true,
+          fontFace: 'Arial',
+          align: 'center',
+          valign: 'middle',
+        }
+
+        if (labelBgVal !== 'none') {
+          textOpts.fill = {
+            color: '000000',
+            transparency: labelBgVal === 'semi' ? 45 : 0,
+          }
+        }
+
+        slide.addText(labelText, textOpts)
+      }
+    }
+  }
+
+  await pres.writeFile({ fileName: 'figure-panel.pptx' })
 })
 
 function imgToDataUrl(img) {

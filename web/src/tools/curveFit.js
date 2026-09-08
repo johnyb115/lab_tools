@@ -23,6 +23,7 @@ const dropzone      = document.getElementById('cf-dropzone')
 const fileInput     = document.getElementById('cf-file-input')
 const pasteArea     = document.getElementById('cf-paste-area')
 const parsePasteBtn = document.getElementById('cf-parse-paste-btn')
+const exampleSelect = document.getElementById('cf-example-select')
 const dataStatus    = document.getElementById('cf-data-status')
 
 const colPanel  = document.getElementById('cf-col-panel')
@@ -259,6 +260,145 @@ parsePasteBtn.addEventListener('click', () => {
   } catch (err) {
     setStatus(`<div class="alert alert-danger">${escapeHtml(err.message)}</div>`)
   }
+})
+
+// ---------------------------------------------------------------------------
+// Example datasets
+// ---------------------------------------------------------------------------
+function noise(i, amplitude) {
+  return amplitude * (Math.sin(i * 7.3 + 0.5) * Math.cos(i * 3.1) * 2)
+}
+
+function linspace(start, end, n) {
+  return Array.from({ length: n }, (_, i) => start + (end - start) * i / (n - 1))
+}
+
+const EXAMPLES = {
+  linear: {
+    xLabel: 'Current_A',
+    yLabel: 'Voltage_V',
+    model: 'linear',
+    generate() {
+      const R = 47
+      const x = linspace(0, 0.5, 30)
+      const y = x.map((I, i) => R * I + noise(i, 0.4))
+      return { x, y }
+    },
+  },
+  polynomial: {
+    xLabel: 'Time_s',
+    yLabel: 'Height_m',
+    model: 'polynomial',
+    generate() {
+      const x = linspace(0, 4.2, 35)
+      const y = x.map((t, i) => -4.9 * t * t + 20 * t + 1.5 + noise(i, 0.3))
+      return { x, y }
+    },
+  },
+  'exp-growth': {
+    xLabel: 'Time_h',
+    yLabel: 'Cell_count',
+    model: 'exp-growth',
+    generate() {
+      const x = linspace(0, 10, 40)
+      const y = x.map((t, i) => 100 * Math.exp(0.35 * t) + noise(i, 8))
+      return { x, y }
+    },
+  },
+  'exp-decay': {
+    xLabel: 'Time_s',
+    yLabel: 'Voltage_V',
+    model: 'exp-decay',
+    generate() {
+      const x = linspace(0, 10, 40)
+      const y = x.map((t, i) => 5 * Math.exp(-0.5 * t) + 0.1 + noise(i, 0.08))
+      return { x, y }
+    },
+  },
+  gaussian: {
+    xLabel: 'Wavelength_nm',
+    yLabel: 'Intensity',
+    model: 'gaussian',
+    generate() {
+      const x = linspace(460, 600, 50)
+      const y = x.map((lam, i) => {
+        const peak = 1000 * Math.exp(-((lam - 532) ** 2) / (2 * 15 * 15))
+        return peak + noise(i, 18)
+      })
+      return { x, y }
+    },
+  },
+  power: {
+    xLabel: 'Body_mass_kg',
+    yLabel: 'Metabolic_rate_W',
+    model: 'power',
+    generate() {
+      const x = []
+      // log-spaced from 0.1 to 100
+      for (let i = 0; i < 30; i++) {
+        x.push(Math.pow(10, -1 + 3 * i / 29))
+      }
+      const y = x.map((W, i) => 70 * Math.pow(W, 0.75) + noise(i, 3))
+      return { x, y }
+    },
+  },
+  logarithmic: {
+    xLabel: 'Concentration_M',
+    yLabel: 'Voltage_mV',
+    model: 'logarithmic',
+    generate() {
+      const x = []
+      // log-spaced from 0.001 to 1
+      for (let i = 0; i < 25; i++) {
+        x.push(Math.pow(10, -3 + 3 * i / 24))
+      }
+      const y = x.map((c, i) => -59.2 * Math.log(c) + 200 + noise(i, 4))
+      return { x, y }
+    },
+  },
+  arrhenius: {
+    xLabel: 'Temperature_K',
+    yLabel: 'Rate_constant',
+    model: 'arrhenius',
+    generate() {
+      const x = linspace(300, 600, 25)
+      const R = 8.314462
+      const y = x.map((T, i) => {
+        const k = 1e13 * Math.exp(-80000 / (R * T))
+        return k + noise(i, k * 0.05)
+      })
+      return { x, y }
+    },
+  },
+}
+
+exampleSelect.addEventListener('change', () => {
+  const key = exampleSelect.value
+  if (!key) return
+  const example = EXAMPLES[key]
+  const { x, y } = example.generate()
+
+  // Format as CSV
+  const lines = [example.xLabel + ',' + example.yLabel]
+  for (let i = 0; i < x.length; i++) {
+    lines.push(x[i].toPrecision(6) + ',' + y[i].toPrecision(6))
+  }
+  const csv = lines.join('\n')
+
+  try {
+    parsed = parseDelimitedText(csv)
+    if (!parsed.columns.length || !parsed.rows.length) throw new Error('No data rows found.')
+    onDataLoaded('example: ' + key)
+
+    // Pre-select the matching model
+    modelSel.value = example.model
+    modelSel.dispatchEvent(new Event('change'))
+  } catch (err) {
+    setStatus(`<div class="alert alert-danger">${escapeHtml(err.message)}</div>`)
+  }
+
+  // Reset the dropdown to the placeholder
+  exampleSelect.selectedIndex = 0
 })
 
 function onDataLoaded(source) {
