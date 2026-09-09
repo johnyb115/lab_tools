@@ -6,6 +6,7 @@
   <title>Lab Tools</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/src/style.css" />
+  <script>(function(){var t=localStorage.getItem("lab-tools-theme");if(!t)t=matchMedia("(prefers-color-scheme:light)").matches?"light":"dark";document.documentElement.dataset.theme=t})()</script>
 </head>
 <body>
   <header id="site-header" class="site-header"></header>
@@ -25,7 +26,7 @@
         <input class="search-input" id="tool-search" type="search" placeholder="Search tools..." autocomplete="off" />
       </div>
       <div class="hero__meta">
-        <span id="tool-count">19 tools</span>
+        <span id="tool-count">22 tools</span>
         <span class="hero__meta-dot"></span>
         <span>Open source</span>
         <span class="hero__meta-dot"></span>
@@ -97,7 +98,7 @@
         <div class="category-header">
           <span class="category-header__icon">📊</span>
           <h2>Data &amp; Analysis</h2>
-          <span class="category-header__count">5 tools</span>
+          <span class="category-header__count">8 tools</span>
         </div>
         <div class="card-grid">
           <a class="tool-card" href="./universal-plotter.html" data-keywords="universal plotter plot chart graph csv xlsx ascii xy">
@@ -157,6 +158,42 @@
               Generate evenly spaced numbers between a min and max and download them as CSV.
             </p>
             <span class="tool-card__badge">Utility</span>
+          </a>
+
+          <a class="tool-card" href="./baseline-correction.html" data-keywords="baseline correction subtract polynomial als rubber band convex hull">
+            <div class="tool-card__header">
+              <span class="tool-card__icon">📉</span>
+              <div class="tool-card__title">Baseline Correction</div>
+            </div>
+            <p class="tool-card__desc">
+              Remove baseline drift with linear, polynomial, ALS (asymmetric least squares),
+              or rubber-band / convex-hull methods.
+            </p>
+            <span class="tool-card__badge">CSV / TXT / XLSX</span>
+          </a>
+
+          <a class="tool-card" href="./data-normalizer.html" data-keywords="normalize min-max z-score area custom range scale">
+            <div class="tool-card__header">
+              <span class="tool-card__icon">⚖️</span>
+              <div class="tool-card__title">Data Normalizer</div>
+            </div>
+            <p class="tool-card__desc">
+              Normalize data with Min-Max, Z-Score, divide-by-max, area normalization,
+              or a custom range. Compare original and normalized side by side.
+            </p>
+            <span class="tool-card__badge">CSV / TXT / XLSX</span>
+          </a>
+
+          <a class="tool-card" href="./interpolation.html" data-keywords="interpolation resample cubic spline linear nearest neighbor upsample downsample">
+            <div class="tool-card__header">
+              <span class="tool-card__icon">🔗</span>
+              <div class="tool-card__title">Interpolation &amp; Resampling</div>
+            </div>
+            <p class="tool-card__desc">
+              Resample data with linear, cubic spline, or nearest-neighbor interpolation
+              to a uniform grid of N points.
+            </p>
+            <span class="tool-card__badge">CSV / TXT / XLSX</span>
           </a>
         </div>
       </div>

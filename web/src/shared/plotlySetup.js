@@ -1,6 +1,3 @@
-// Thin wrapper around Plotly so every tool gets the same dark styling
-// and the same toolbar/export behaviour for free.
-
 import Plotly from 'plotly.js-dist-min'
 
 export { Plotly }
@@ -14,15 +11,28 @@ export function colorForIndex(i) {
   return PALETTE[i % PALETTE.length]
 }
 
-export function baseLayout(overrides = {}) {
+function getThemeColors() {
+  const s = getComputedStyle(document.documentElement)
+  const v = (name) => s.getPropertyValue(name).trim()
   return {
-    paper_bgcolor: '#131316',
-    plot_bgcolor: '#09090b',
-    font: { color: '#ededf0', family: "'Inter', ui-sans-serif, system-ui, sans-serif" },
+    paper: v('--bg-elev') || '#131316',
+    plot: v('--bg') || '#09090b',
+    text: v('--text') || '#ededf0',
+    grid: v('--border') || '#23232b',
+    font: v('--font') || "'Inter', ui-sans-serif, system-ui, sans-serif",
+  }
+}
+
+export function baseLayout(overrides = {}) {
+  const c = getThemeColors()
+  return {
+    paper_bgcolor: c.paper,
+    plot_bgcolor: c.plot,
+    font: { color: c.text, family: c.font },
     margin: { t: 50, r: 30, l: 60, b: 50 },
     legend: { bgcolor: 'rgba(0,0,0,0)' },
-    xaxis: { gridcolor: '#23232b', zerolinecolor: '#23232b', ...overrides.xaxis },
-    yaxis: { gridcolor: '#23232b', zerolinecolor: '#23232b', ...overrides.yaxis },
+    xaxis: { gridcolor: c.grid, zerolinecolor: c.grid, ...overrides.xaxis },
+    yaxis: { gridcolor: c.grid, zerolinecolor: c.grid, ...overrides.yaxis },
     ...overrides,
   }
 }
@@ -36,6 +46,23 @@ export function baseConfig(filenameBase = 'plot') {
   }
 }
 
+function relayoutForTheme(container) {
+  const c = getThemeColors()
+  Plotly.relayout(container, {
+    paper_bgcolor: c.paper,
+    plot_bgcolor: c.plot,
+    'font.color': c.text,
+    'xaxis.gridcolor': c.grid,
+    'xaxis.zerolinecolor': c.grid,
+    'yaxis.gridcolor': c.grid,
+    'yaxis.zerolinecolor': c.grid,
+  }).catch(() => {})
+}
+
 export async function renderPlot(container, traces, layout = {}, filenameBase = 'plot') {
   await Plotly.react(container, traces, baseLayout(layout), baseConfig(filenameBase))
+  if (!container._themeWatcher) {
+    container._themeWatcher = true
+    document.addEventListener('labtools:themechange', () => relayoutForTheme(container))
+  }
 }

@@ -839,8 +839,8 @@ function plotFit() {
       grid: { rows: 2, columns: 1, subplots: [['xy'], ['x2y2']], roworder: 'top to bottom' },
       xaxis: { title: xColSel.value },
       yaxis: { title: yColSel.value, domain: [0.35, 1] },
-      xaxis2: { title: xColSel.value, gridcolor: '#2a3140', zerolinecolor: '#2a3140', anchor: 'y2' },
-      yaxis2: { title: 'Residual', domain: [0, 0.25], gridcolor: '#2a3140', zerolinecolor: '#2a3140', anchor: 'x2' },
+      xaxis2: { title: xColSel.value, anchor: 'y2' },
+      yaxis2: { title: 'Residual', domain: [0, 0.25], anchor: 'x2' },
       margin: { t: 30, r: 30, l: 60, b: 50 },
       height: 600,
     }
@@ -856,6 +856,11 @@ function plotFit() {
 }
 
 showResidualsC.addEventListener('change', plotFit)
+
+document.addEventListener('labtools:themechange', () => {
+  if (fitResult) plotFit()
+  else if (xData.length) plotRawData()
+})
 
 // ---------------------------------------------------------------------------
 // Downloads

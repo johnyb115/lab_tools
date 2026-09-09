@@ -18,6 +18,9 @@ export const CATEGORIES = [
       { id: 'data-smoother', label: 'Data Smoother', href: './data-smoother.html', icon: '〰️' },
       { id: 'stats-calculator', label: 'Uncertainty & Stats', href: './stats-calculator.html', icon: '🎯' },
       { id: 'linspace', label: 'Linspace Generator', href: './linspace.html', icon: '🔢' },
+      { id: 'baseline-correction', label: 'Baseline Correction', href: './baseline-correction.html', icon: '📉' },
+      { id: 'data-normalizer', label: 'Data Normalizer', href: './data-normalizer.html', icon: '⚖️' },
+      { id: 'interpolation', label: 'Interpolation & Resampling', href: './interpolation.html', icon: '🔗' },
     ],
   },
   {
@@ -57,6 +60,10 @@ function findTool(activeId) {
 const GRID_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>`
 
 const GITHUB_SVG = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>`
+
+const SUN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
+
+const MOON_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`
 
 export function initChrome(activeId) {
   const header = document.getElementById('site-header')
@@ -103,6 +110,10 @@ export function initChrome(activeId) {
             <span class="nav-toggle__icon">${GRID_SVG}</span>
             <span>All Tools</span>
           </button>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme">
+            <span class="theme-toggle__sun">${SUN_SVG}</span>
+            <span class="theme-toggle__moon">${MOON_SVG}</span>
+          </button>
           <a class="site-header__link" href="https://github.com/johnyb115/lab_tools" target="_blank" rel="noopener" aria-label="GitHub">
             ${GITHUB_SVG}
           </a>
@@ -148,6 +159,17 @@ export function initChrome(activeId) {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && dropdown.classList.contains('is-open')) closeNav()
     })
+
+    const themeBtn = document.getElementById('theme-toggle')
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        const current = document.documentElement.dataset.theme
+        const next = current === 'light' ? 'dark' : 'light'
+        document.documentElement.dataset.theme = next
+        localStorage.setItem('lab-tools-theme', next)
+        document.dispatchEvent(new CustomEvent('labtools:themechange', { detail: { theme: next } }))
+      })
+    }
   }
 
   if (footer) {

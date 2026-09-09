@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baseline Correction — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <script>(function(){var t=localStorage.getItem("lab-tools-theme");if(!t)t=matchMedia("(prefers-color-scheme:light)").matches?"light":"dark";document.documentElement.dataset.theme=t})()</script>
+  <style>
+    #bl-paste {
+      resize: vertical;
+      min-height: 4rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.82rem;
+    }
+    .bl-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .bl-slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+    }
+    .bl-slider-val {
+      min-width: 3.2rem;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .bl-caption {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin: 0.35rem 0 0;
+    }
+    #bl-status .alert {
+      margin-top: 0.5rem;
+    }
+    .bl-export-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>📉 Baseline Correction</h1>
+      <p>
+        Remove polynomial, linear, or rubber-band baselines from X-Y data.
+        Upload a file or paste data, pick a method, and export the corrected curve.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Data Input</h2>
+          <div class="dropzone" id="bl-dropzone">
+            <input type="file" id="bl-file-input" accept=".csv,.txt,.tsv,.asc" />
+            <div>📄 Click or drop a CSV / TXT file</div>
+          </div>
+          <div class="field">
+            <label for="bl-paste">Or paste data</label>
+            <textarea id="bl-paste" rows="5" placeholder="x,y&#10;1,2.3&#10;..."></textarea>
+          </div>
+          <button type="button" class="btn" id="bl-load-paste">Load pasted data</button>
+          <div id="bl-status"></div>
+        </div>
+
+        <div class="panel" id="bl-col-panel" style="display: none">
+          <h2>Columns</h2>
+          <div class="field">
+            <label for="bl-x-col">X column</label>
+            <select id="bl-x-col"></select>
+          </div>
+          <div class="field">
+            <label for="bl-y-col">Y column</label>
+            <select id="bl-y-col"></select>
+          </div>
+        </div>
+
+        <div class="panel" id="bl-method-panel" style="display: none">
+          <h2>Baseline Method</h2>
+          <div class="field">
+            <label for="bl-method">Method</label>
+            <select id="bl-method">
+              <option value="linear">Linear — first to last point</option>
+              <option value="poly">Polynomial</option>
+              <option value="als">Asymmetric Least Squares</option>
+              <option value="rubberband">Rubber Band / Convex Hull</option>
+            </select>
+          </div>
+
+          <div id="bl-method-opts">
+            <div id="bl-opts-poly" hidden>
+              <div class="field">
+                <label>Polynomial degree</label>
+                <div class="bl-slider-row">
+                  <input type="range" id="bl-poly-deg" min="1" max="8" step="1" value="3" />
+                  <span class="bl-slider-val" id="bl-poly-deg-val">3</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="bl-opts-als" hidden>
+              <div class="field">
+                <label>Lambda (λ) — smoothness</label>
+                <div class="bl-slider-row">
+                  <input type="range" id="bl-als-lambda" min="2" max="9" step="0.1" value="5" />
+                  <span class="bl-slider-val" id="bl-als-lambda-val">1.0e5</span>
+                </div>
+                <p class="bl-caption">Log₁₀ scale: 10² to 10⁹</p>
+              </div>
+              <div class="field">
+                <label>Asymmetry (p)</label>
+                <div class="bl-slider-row">
+                  <input type="range" id="bl-als-p" min="0.001" max="0.1" step="0.001" value="0.01" />
+                  <span class="bl-slider-val" id="bl-als-p-val">0.010</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" id="bl-export-panel" style="display: none">
+          <h2>Export</h2>
+          <div class="bl-export-btns">
+            <button type="button" class="btn btn-primary" id="bl-dl-corrected">⬇ Download corrected CSV</button>
+            <button type="button" class="btn" id="bl-dl-baseline">⬇ Download baseline CSV</button>
+          </div>
+          <p class="bl-caption">
+            To save a PNG of the plot, use the camera icon in the Plotly toolbar (top-right of the chart).
+          </p>
+        </div>
+      </aside>
+
+      <section>
+        <div id="bl-plot" class="plot-area">
+          <div class="empty-state">Upload or paste X,Y data to get started.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/baselineCorrection.js"></script>
+</body>
+</html>

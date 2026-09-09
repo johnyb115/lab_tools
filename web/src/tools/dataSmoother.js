@@ -1,7 +1,7 @@
 import { initChrome } from '../shared/nav.js'
 import { initDropzone } from '../shared/dropzone.js'
 import { downloadCSV, toCSV } from '../shared/download.js'
-import Plotly from 'plotly.js-dist-min'
+import { Plotly, baseLayout, baseConfig } from '../shared/plotlySetup.js'
 import Papa from 'papaparse'
 
 initChrome('data-smoother')
@@ -36,6 +36,10 @@ const dlSmoothed  = document.getElementById('ds-dl-smoothed')
 const dlBoth      = document.getElementById('ds-dl-both')
 
 const plotEl      = document.getElementById('ds-plot')
+
+document.addEventListener('labtools:themechange', () => {
+  if (plotEl && plotEl._fullData) updatePlot()
+})
 
 const maWin       = document.getElementById('ds-ma-win')
 const maWinVal    = document.getElementById('ds-ma-win-val')
@@ -415,14 +419,8 @@ function extractAndSmooth() {
 // ---------------------------------------------------------------------------
 // Plot
 // ---------------------------------------------------------------------------
-const LAYOUT = {
-  paper_bgcolor: 'rgba(0,0,0,0)',
-  plot_bgcolor: '#161b22',
-  font: { color: '#e6e9ef', family: 'system-ui, sans-serif' },
-  margin: { t: 30, r: 30, l: 60, b: 50 },
-  legend: { bgcolor: 'rgba(0,0,0,0)' },
-  xaxis: { gridcolor: '#2a3140', zerolinecolor: '#2a3140' },
-  yaxis: { gridcolor: '#2a3140', zerolinecolor: '#2a3140' },
+function getLayout() {
+  return baseLayout({ margin: { t: 30, r: 30, l: 60, b: 50 } })
 }
 
 function updatePlot() {
@@ -451,18 +449,11 @@ function updatePlot() {
     line: { color: '#4c9aff', width: 2 },
   })
 
-  const layout = {
-    ...LAYOUT,
-    xaxis: { ...LAYOUT.xaxis, title: xLabel },
-    yaxis: { ...LAYOUT.yaxis, title: yLabel },
-  }
+  const layout = getLayout()
+  layout.xaxis.title = xLabel
+  layout.yaxis.title = yLabel
 
-  Plotly.react(plotEl, traces, layout, {
-    responsive: true,
-    scrollZoom: true,
-    displaylogo: false,
-    toImageButtonOptions: { format: 'png', filename: 'smoothed-data', scale: 2 },
-  })
+  Plotly.react(plotEl, traces, layout, baseConfig('smoothed-data'))
 }
 
 // ---------------------------------------------------------------------------

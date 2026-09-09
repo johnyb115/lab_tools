@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interpolation & Resampling — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <script>(function(){var t=localStorage.getItem("lab-tools-theme");if(!t)t=matchMedia("(prefers-color-scheme:light)").matches?"light":"dark";document.documentElement.dataset.theme=t})()</script>
+  <style>
+    #ip-paste {
+      resize: vertical;
+      min-height: 4rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.82rem;
+    }
+    .ip-caption {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin: 0.35rem 0 0;
+    }
+    #ip-status .alert {
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>🔄 Interpolation & Resampling</h1>
+      <p>
+        Resample X-Y data to uniform spacing using linear, cubic spline, or
+        nearest-neighbor interpolation. Upload a file or paste data.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Data Input</h2>
+          <div class="dropzone" id="ip-dropzone">
+            <input type="file" id="ip-file-input" accept=".csv,.txt,.tsv,.asc" />
+            <div>📄 Click or drop a CSV / TXT file</div>
+          </div>
+          <div class="field">
+            <label for="ip-paste">Or paste data</label>
+            <textarea id="ip-paste" rows="5" placeholder="x,y&#10;1,2.3&#10;2,4.1&#10;3,3.8&#10;..."></textarea>
+          </div>
+          <button type="button" class="btn" id="ip-load-paste">Load pasted data</button>
+          <div id="ip-status"></div>
+        </div>
+
+        <div class="panel" id="ip-col-panel" style="display: none">
+          <h2>Columns</h2>
+          <div class="field">
+            <label for="ip-x-col">X column</label>
+            <select id="ip-x-col"></select>
+          </div>
+          <div class="field">
+            <label for="ip-y-col">Y column</label>
+            <select id="ip-y-col"></select>
+          </div>
+        </div>
+
+        <div class="panel" id="ip-interp-panel" style="display: none">
+          <h2>Interpolation</h2>
+          <div class="field">
+            <label for="ip-method">Method</label>
+            <select id="ip-method">
+              <option value="linear">Linear</option>
+              <option value="spline">Cubic Spline</option>
+              <option value="nearest">Nearest Neighbor</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ip-npoints">Number of output points</label>
+            <input type="text" id="ip-npoints" value="500" />
+          </div>
+          <hr class="sep" />
+          <p class="ip-caption">X range override (leave blank for auto)</p>
+          <div class="field-row">
+            <div class="field">
+              <label for="ip-xmin">X min</label>
+              <input type="text" id="ip-xmin" placeholder="auto" />
+            </div>
+            <div class="field">
+              <label for="ip-xmax">X max</label>
+              <input type="text" id="ip-xmax" placeholder="auto" />
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" id="ip-export-panel" style="display: none">
+          <h2>Export</h2>
+          <button type="button" class="btn btn-primary" id="ip-dl">⬇ Download interpolated CSV</button>
+          <p class="ip-caption">
+            To save a PNG of the plot, use the camera icon in the Plotly toolbar (top-right of the chart).
+          </p>
+        </div>
+      </aside>
+
+      <section>
+        <div id="ip-plot" class="plot-area">
+          <div class="empty-state">Upload or paste X,Y data to get started.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+
+  <script type="module" src="/src/tools/interpolation.js"></script>
+</body>
+</html>
