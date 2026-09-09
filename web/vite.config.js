@@ -32,6 +32,7 @@ export default defineConfig({
         baselineCorrection: page('baseline-correction.html'),
         dataNormalizer: page('data-normalizer.html'),
         interpolation: page('interpolation.html'),
+        arrowGenerator: page('arrow-generator.html'),
         privacy: page('privacy.html'),
       },
     },

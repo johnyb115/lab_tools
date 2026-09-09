@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arrow &amp; Annotation Generator — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <script>(function(){var t=localStorage.getItem("lab-tools-theme");if(!t)t=matchMedia("(prefers-color-scheme:light)").matches?"light":"dark";document.documentElement.dataset.theme=t})()</script>
+  <style>
+    #ag-canvas-wrap {
+      position: relative;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-elev);
+    }
+    #ag-editor {
+      display: block;
+      width: 100%;
+      height: auto;
+      cursor: crosshair;
+    }
+    .ag-hint {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      margin: 0.6rem 0 0;
+    }
+    .ag-corner-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem;
+      margin: 0.4rem 0 0.2rem;
+    }
+    .ag-corner-grid button {
+      padding: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .ag-corner-grid button.is-active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .ag-swatch-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .ag-swatch-row input[type="text"] { flex: 1; }
+    #ag-pptx-note {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+
+  <main class="site-main">
+    <div class="page-header">
+      <h1>➜ Arrow &amp; Annotation Generator</h1>
+      <p>
+        Build straight, curved, or elbow arrows for figures and annotations — with real
+        arrowheads baked into the geometry (not SVG markers), so they survive being pasted
+        into PowerPoint or Illustrator. Straight and elbow arrows also export as native,
+        fully-editable PowerPoint shapes.
+      </p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>1. Shape</h2>
+          <div class="field">
+            <label for="ag-shape">Arrow shape</label>
+            <select id="ag-shape">
+              <option value="straight">Straight</option>
+              <option value="curved">Curved</option>
+              <option value="elbow">Elbow (right angle)</option>
+            </select>
+          </div>
+
+          <div class="field" id="ag-curvature-field" hidden>
+            <label for="ag-curvature">Curvature</label>
+            <input id="ag-curvature" type="range" min="-100" max="100" value="35" />
+            <div class="range-readout">
+              <span>bend left</span>
+              <span id="ag-curvature-value">35</span>
+              <span>bend right</span>
+            </div>
+          </div>
+
+          <div id="ag-elbow-field" hidden>
+            <label>Elbow direction</label>
+            <div class="ag-corner-grid">
+              <button type="button" class="btn is-active" id="ag-elbow-h" data-dir="h-first">→ Horizontal first</button>
+              <button type="button" class="btn" id="ag-elbow-v" data-dir="v-first">↓ Vertical first</button>
+            </div>
+          </div>
+
+          <p class="ag-hint">Click the canvas to set the start point, then click again for the end point. Drag the small handles afterward to fine-tune.</p>
+          <div class="btn-row" style="margin-top:0.6rem">
+            <button id="ag-new-arrow" class="btn" type="button">↺ New arrow</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>2. Arrowhead</h2>
+          <div class="field">
+            <label for="ag-head-mode">Head mode</label>
+            <select id="ag-head-mode">
+              <option value="single">Single (end only)</option>
+              <option value="double">Double-headed</option>
+              <option value="equilibrium">Equilibrium (⇌ two-line)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="ag-head-style">Arrowhead style</label>
+            <select id="ag-head-style">
+              <option value="filled">Filled triangle</option>
+              <option value="open">Open / chevron</option>
+              <option value="concave">Concave / stealth</option>
+              <option value="diamond">Diamond</option>
+              <option value="circle">Circle / dot</option>
+              <option value="bar">Bar (T-stop, inhibits)</option>
+            </select>
+          </div>
+
+          <label class="checkbox-row" id="ag-barb-row">
+            <input type="checkbox" id="ag-single-barb" />
+            Single barb (resonance / electron-pushing style)
+          </label>
+
+          <div class="field">
+            <label for="ag-head-size">Head size</label>
+            <input id="ag-head-size" type="range" min="8" max="40" value="16" />
+            <div class="range-readout">
+              <span>small</span>
+              <span id="ag-head-size-value">16</span>
+              <span>large</span>
+            </div>
+          </div>
+
+          <div class="field" id="ag-eq-gap-field" hidden>
+            <label for="ag-eq-gap">Equilibrium line gap</label>
+            <input id="ag-eq-gap" type="range" min="4" max="24" value="9" />
+            <div class="range-readout">
+              <span>tight</span>
+              <span id="ag-eq-gap-value">9</span>
+              <span>wide</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>3. Style</h2>
+          <div class="field">
+            <label for="ag-color">Color</label>
+            <div class="ag-swatch-row">
+              <input id="ag-color" type="color" value="#4c9aff" />
+              <input id="ag-color-text" type="text" value="#4c9aff" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="ag-stroke-width">Stroke width (px)</label>
+            <input id="ag-stroke-width" type="range" min="1" max="12" step="0.5" value="3" />
+            <div class="range-readout">
+              <span>thin</span>
+              <span id="ag-stroke-width-value">3</span>
+              <span>thick</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>4. Label</h2>
+          <div class="field">
+            <label for="ag-label-text">Text</label>
+            <input id="ag-label-text" type="text" placeholder="e.g. catalyst, 5 min" />
+          </div>
+          <div class="field" id="ag-label-pos-field" hidden>
+            <label for="ag-label-pos">Position</label>
+            <select id="ag-label-pos">
+              <option value="above">Above arrow</option>
+              <option value="below">Below arrow</option>
+              <option value="on">On arrow</option>
+            </select>
+          </div>
+          <div class="field" id="ag-label-size-field" hidden>
+            <label for="ag-label-size">Font size (px)</label>
+            <input id="ag-label-size" type="range" min="10" max="36" value="16" />
+            <div class="range-readout">
+              <span>small</span>
+              <span id="ag-label-size-value">16</span>
+              <span>large</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>5. Export</h2>
+          <div class="btn-row" style="margin-bottom:0.5rem">
+            <button id="ag-copy-svg" class="btn" type="button" disabled>Copy SVG</button>
+            <button id="ag-download-svg" class="btn" type="button" disabled>⬇ SVG</button>
+          </div>
+          <div class="btn-row">
+            <button id="ag-download-png" class="btn" type="button" disabled>⬇ PNG</button>
+            <button id="ag-download-pptx" class="btn btn-primary" type="button" disabled>⬇ PPTX</button>
+          </div>
+          <p id="ag-pptx-note">PPTX export creates a real, editable PowerPoint line shape with a native arrowhead. Available for straight/elbow arrows with triangle, open, concave, diamond, or circle heads. Curved arrows and the bar head export as SVG/PNG only.</p>
+        </div>
+      </aside>
+
+      <section>
+        <div id="ag-canvas-wrap">
+          <svg id="ag-editor" viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site-footer" class="site-footer"></footer>
+  <script type="module" src="/src/tools/arrowGenerator.js"></script>
+</body>
+</html>

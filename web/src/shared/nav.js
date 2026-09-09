@@ -28,6 +28,7 @@ export const CATEGORIES = [
     icon: '🖼️',
     tools: [
       { id: 'figure-composer', label: 'Figure Panel Composer', href: './figure-composer.html', icon: '🖼️' },
+      { id: 'arrow-generator', label: 'Arrow & Annotation Generator', href: './arrow-generator.html', icon: '➜' },
       { id: 'plot-digitizer', label: 'Plot Digitizer', href: './plot-digitizer.html', icon: '🖼️' },
       { id: 'auto-crop', label: 'Image Auto-Crop', href: './auto-crop.html', icon: '✂️' },
       { id: 'background-remover', label: 'Background Remover', href: './background-remover.html', icon: '🪄' },
