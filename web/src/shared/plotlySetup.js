@@ -16,13 +16,13 @@ export function colorForIndex(i) {
 
 export function baseLayout(overrides = {}) {
   return {
-    paper_bgcolor: '#161b22',
-    plot_bgcolor: '#0e1117',
-    font: { color: '#e6e9ef', family: 'ui-sans-serif, system-ui, sans-serif' },
+    paper_bgcolor: '#131316',
+    plot_bgcolor: '#09090b',
+    font: { color: '#ededf0', family: "'Inter', ui-sans-serif, system-ui, sans-serif" },
     margin: { t: 50, r: 30, l: 60, b: 50 },
     legend: { bgcolor: 'rgba(0,0,0,0)' },
-    xaxis: { gridcolor: '#2a3140', zerolinecolor: '#2a3140', ...overrides.xaxis },
-    yaxis: { gridcolor: '#2a3140', zerolinecolor: '#2a3140', ...overrides.yaxis },
+    xaxis: { gridcolor: '#23232b', zerolinecolor: '#23232b', ...overrides.xaxis },
+    yaxis: { gridcolor: '#23232b', zerolinecolor: '#23232b', ...overrides.yaxis },
     ...overrides,
   }
 }
