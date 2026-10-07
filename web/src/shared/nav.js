@@ -46,6 +46,13 @@ export const CATEGORIES = [
       { id: 'pcb-qr', label: 'PCB QR Generator', href: './pcb-qr.html', icon: '🔲' },
     ],
   },
+  {
+    name: 'Simulators',
+    icon: '🎛️',
+    tools: [
+      { id: 'anodic-bonding', label: 'Anodic Bonding Simulator', href: './anodic-bonding.html', icon: '♨️' },
+    ],
+  },
 ]
 
 export const NAV_ITEMS = CATEGORIES.flatMap((c) => c.tools)

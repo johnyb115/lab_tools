@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anodic Bonding Simulator — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <script>(function(){var t=localStorage.getItem("lab-tools-theme");if(!t)t=matchMedia("(prefers-color-scheme:light)").matches?"light":"dark";document.documentElement.dataset.theme=t})()</script>
+  <style>
+    /* keep wide canvases from stretching the grid column on phones */
+    .layout-sidebar > aside, .ab-section { min-width: 0; }
+    .ab-readouts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+      gap: 0.75rem;
+    }
+    .ab-ro { border-left: 3px solid var(--border); padding: 0.1rem 0 0.1rem 0.7rem; min-width: 0; }
+    .ab-ro b {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+    }
+    .ab-ro span { font-size: 0.75rem; color: var(--text-dim); }
+    .ab-ro.is-cc { border-left-color: var(--warning); }
+    .ab-ro.is-done { border-left-color: var(--accent-2); }
+    .ab-pair {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    @media (max-width: 720px) { .ab-pair { grid-template-columns: minmax(0, 1fr); } }
+    .ab-pair .panel + .panel { margin-top: 0; }
+    .ab-section > .panel + .panel, .ab-section > .panel + .ab-pair, .ab-section > .ab-pair + .panel { margin-top: 1rem; }
+    .ab-section canvas { display: block; width: 100%; height: auto; max-width: 100%; }
+    .ab-scroll { overflow-x: auto; max-width: 100%; }
+    #ab-sec { min-width: 680px; }
+    .ab-cap { font-size: 0.82rem; color: var(--text-dim); margin: 0.6rem 0 0; }
+    .ab-legend { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--text-dim); margin-top: 0.6rem; }
+    .ab-cbar { height: 10px; flex: 1; border-radius: 3px; background: linear-gradient(90deg, #0d0829, #4a1170, #a8325e, #ef7b2b, #fbe46a); }
+    .ab-keys { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-size: 0.75rem; color: var(--text-dim); margin-top: 0.6rem; }
+    .ab-keys span { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .ab-keys i { display: inline-block; width: 22px; height: 0; border-top: 2.5px solid var(--accent); }
+    .ab-keys i.dash { border-top: 2px dashed var(--accent-2); }
+    .ab-keys i.dot { border-top: 2px dotted var(--text-muted); }
+    .ab-seg .btn.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+    .ab-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem; }
+    .ab-presets { display: flex; flex-direction: column; gap: 0.4rem; }
+    .ab-presets .btn { justify-content: flex-start; font-weight: 500; }
+    .ab-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+    .ab-notes ul { padding-left: 1.1rem; margin: 0; }
+    .ab-notes li { font-size: 0.86rem; color: var(--text-dim); max-width: 70ch; }
+    .ab-notes li + li { margin-top: 0.35rem; }
+    .ab-refs { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.75rem; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+  <main class="site-main">
+    <div class="page-header">
+      <h1>♨️ Anodic Bonding Simulator</h1>
+      <p>How the bonding voltage from a point or plate electrode spreads through hot Pyrex on a 4" Si wafer, and how fast the bonded zone grows. Each spot that touches must first charge a thin Na⁺-depleted layer, and that charge has to travel sideways through the glass.</p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Run</h2>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="ab-play" type="button">Pause</button>
+            <button class="btn" id="ab-reset" type="button">Restart</button>
+          </div>
+          <div class="field" style="margin-top:0.9rem">
+            <label for="ab-speed">Playback speed</label>
+            <input type="range" id="ab-speed" min="0" max="5" step="1" value="2" />
+            <div class="range-readout"><span>simulated time per second</span><span id="ab-speed-out"></span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Bonding conditions</h2>
+          <div class="field">
+            <label for="ab-temp">Glass temperature</label>
+            <input type="range" id="ab-temp" min="230" max="450" step="1" value="300" />
+            <div class="range-readout"><span>ρ = <span id="ab-rho"></span></span><span id="ab-temp-out"></span></div>
+          </div>
+          <div class="field">
+            <label for="ab-volt">Bonding voltage</label>
+            <input type="range" id="ab-volt" min="200" max="1000" step="10" value="800" />
+            <div class="range-readout"><span></span><span id="ab-volt-out"></span></div>
+          </div>
+          <div class="field">
+            <label for="ab-thick">Pyrex thickness</label>
+            <input type="range" id="ab-thick" min="0.3" max="1.1" step="0.05" value="0.5" />
+            <div class="range-readout"><span></span><span id="ab-thick-out"></span></div>
+          </div>
+          <div class="field">
+            <label for="ab-gap">Gap-closing voltage</label>
+            <input type="range" id="ab-gap" min="10" max="300" step="5" value="50" />
+            <div class="range-readout"><span>higher for bowed wafers or particles</span><span id="ab-gap-out"></span></div>
+          </div>
+          <div class="field">
+            <label>Top electrode</label>
+            <div class="btn-row ab-seg">
+              <button class="btn is-active" id="ab-pin" type="button" aria-pressed="true">Pin Ø6 mm</button>
+              <button class="btn" id="ab-plate" type="button" aria-pressed="false">Plate</button>
+            </div>
+          </div>
+          <div class="field" id="ab-plate-field" hidden>
+            <label for="ab-plate-d">Plate diameter</label>
+            <input type="range" id="ab-plate-d" min="10" max="95" step="1" value="85" />
+            <div class="range-readout"><span></span><span id="ab-plate-out"></span></div>
+          </div>
+          <div class="field">
+            <label for="ab-ilim">Power supply current limit</label>
+            <input type="range" id="ab-ilim" min="1" max="100" step="1" value="50" />
+            <div class="range-readout"><span></span><span id="ab-ilim-out"></span></div>
+          </div>
+          <p class="ab-hint">Changes apply to the bond in progress. Restart begins again at 0:00:00.</p>
+        </div>
+
+        <div class="panel">
+          <h2>Scenarios</h2>
+          <div class="ab-presets">
+            <button class="btn" type="button" data-preset="300,pin">300 °C, pin (Luo et al. conditions)</button>
+            <button class="btn" type="button" data-preset="250,pin">250 °C, pin</button>
+            <button class="btn" type="button" data-preset="400,pin">400 °C, pin</button>
+            <button class="btn" type="button" data-preset="300,plate">300 °C, Ø85 mm plate</button>
+          </div>
+        </div>
+      </aside>
+
+      <section class="ab-section">
+        <div class="panel">
+          <div class="ab-readouts">
+            <div class="ab-ro"><b id="ab-r-time">0:00:00</b><span>elapsed (h:mm:ss)</span></div>
+            <div class="ab-ro" id="ab-ro-front"><b id="ab-r-front">—</b><span>bond front radius</span></div>
+            <div class="ab-ro"><b id="ab-r-area">—</b><span>wafer area bonded</span></div>
+            <div class="ab-ro"><b id="ab-r-speed">—</b><span>front speed</span></div>
+            <div class="ab-ro"><b id="ab-r-current">—</b><span>bonding current</span></div>
+            <div class="ab-ro" id="ab-ro-volt"><b id="ab-r-volt">—</b><span id="ab-r-volt-label">voltage at electrode</span></div>
+          </div>
+        </div>
+
+        <div class="ab-pair">
+          <div class="panel">
+            <h2>Top view: potential in the glass</h2>
+            <canvas id="ab-top" width="520" height="520" aria-label="Top view of the wafer coloured by potential"></canvas>
+            <div class="ab-legend"><span>0 V</span><div class="ab-cbar"></div><span id="ab-legend-max">800 V</span></div>
+            <p class="ab-cap">Dashed circle: bond front. Behind it the glass touches the Si; outside it there is still a gap, and the lifted glass sits at the front's potential.</p>
+          </div>
+          <div class="panel">
+            <h2>Radial profile</h2>
+            <canvas id="ab-prof" width="560" height="380" aria-label="Potential versus radius"></canvas>
+            <div class="ab-keys"><span><i></i>glass potential</span><span><i class="dash"></i>voltage held by the depleted layer</span><span><i class="dot"></i>gap-closing voltage</span></div>
+            <p class="ab-cap">Current flows down only where the glass potential is above the depleted-layer voltage. A fully charged spot stops drawing current, so the voltage reaches further out and the front moves on.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Cross-section (thicknesses exaggerated)</h2>
+          <div class="ab-scroll"><canvas id="ab-sec" width="1000" height="230" aria-label="Cross-section of electrode, glass, silicon and chuck"></canvas></div>
+          <p class="ab-cap">Dark band at the bottom of the glass: Na⁺-depleted layer, drawn relative to its full charge at the applied voltage (about 15 nm thick at 800 V). Ticks mark spots that are still charging; brighter means more current.</p>
+        </div>
+
+        <div class="ab-pair">
+          <div class="panel">
+            <h2>Bond front vs time</h2>
+            <canvas id="ab-hist-front" width="560" height="300" aria-label="Bond front radius versus time"></canvas>
+          </div>
+          <div class="panel">
+            <h2>Current vs time</h2>
+            <canvas id="ab-hist-current" width="560" height="300" aria-label="Bonding current versus time"></canvas>
+            <p class="ab-cap">Log scale, as an ammeter in the chuck's ground lead would see it. Only the charging stage is modelled; a real bond keeps a small residual current for many minutes.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ab-notes">
+            <div>
+              <h2>How the model works</h2>
+              <ul>
+                <li>Hot Pyrex conducts through Na⁺ ions. Resistivity follows Corning 7740 data (log₁₀ρ = 8.1 Ω·cm at 250 °C, 6.6 at 350 °C), so it drops about 18× between 300 °C and 400 °C.</li>
+                <li>The glass is a resistive sheet. Current enters at the electrode, runs sideways, and can only go down into the Si where the glass already touches.</li>
+                <li>Where it touches, Na⁺ moves away from the interface and leaves a space-charge layer whose voltage grows as Q²/(2εeN), with ε<sub>r</sub> = 4.6 and N = 1.7×10²⁷ m⁻³ (4 wt% Na₂O). At 800 V it holds about 0.4 mC/cm²; once full, that spot carries no more current.</li>
+                <li>The gap closes wherever the lifted glass is more than the gap-closing voltage away from the Si. Flat, clean wafers need tens of volts; bow and particles need more.</li>
+                <li>No time constants are fitted. The speed follows from glass resistivity, thickness and that charge.</li>
+              </ul>
+            </div>
+            <div>
+              <h2>Compared with published bonds</h2>
+              <ul>
+                <li>Luo et al. bonded 4" Pyrex to Si at 300 °C and 800 V with a point electrode: about 1.5 h for the whole wafer, part still unbonded after 30 min. The model gives about 45 min with a 50 V gap-closing voltage and about 80 min with 200 V.</li>
+                <li>In the same work a planar electrode bonded nearly the whole area at once and reached their 30 mA current limit. The model starts at about 48 mA for a Ø85 mm plate at 300 °C.</li>
+                <li>Not modelled: the slow later stage (depleted layer growing to about a micrometre, bond strengthening), which is why recipes hold the voltage longer than the front needs. The glass is assumed to be at the set temperature; in vacuum it can be tens of degrees below the chuck.</li>
+              </ul>
+              <p class="ab-refs">
+                Luo et al., <a href="https://www.jos.ac.cn/article/doi/10.1088/1674-4926/33/6/066001" target="_blank" rel="noopener">J. Semicond. 33, 066001 (2012)</a> ·
+                Wallis &amp; Pomerantz, J. Appl. Phys. 40, 3946 (1969) ·
+                Carlson, Hang &amp; Stockdale, J. Am. Ceram. Soc. 57, 295 (1974) ·
+                Knowles &amp; van Helvoort, Int. Mater. Rev. 51, 273 (2006)
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer" class="site-footer"></footer>
+  <script type="module" src="/src/tools/anodicBonding.js"></script>
+</body>
+</html>

@@ -33,6 +33,7 @@ export default defineConfig({
         dataNormalizer: page('data-normalizer.html'),
         interpolation: page('interpolation.html'),
         arrowGenerator: page('arrow-generator.html'),
+        anodicBonding: page('anodic-bonding.html'),
         privacy: page('privacy.html'),
       },
     },

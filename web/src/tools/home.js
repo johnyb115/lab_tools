@@ -5,6 +5,7 @@ initChrome('home')
 const searchInput = document.getElementById('tool-search')
 const categories = document.querySelectorAll('.category-section')
 const toolCount = document.getElementById('tool-count')
+const totalTools = document.querySelectorAll('.tool-card').length
 
 if (searchInput) {
   searchInput.addEventListener('input', () => {
@@ -29,7 +30,7 @@ if (searchInput) {
     })
 
     if (toolCount) {
-      toolCount.textContent = q ? `${visible} result${visible !== 1 ? 's' : ''}` : '19 tools'
+      toolCount.textContent = q ? `${visible} result${visible !== 1 ? 's' : ''}` : `${totalTools} tools`
     }
   })
 }
