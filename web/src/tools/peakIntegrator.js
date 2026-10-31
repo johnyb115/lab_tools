@@ -93,7 +93,7 @@ function renderFileList() {
     .map(
       (f) => `
       <li class="pi-file-item${f.id === activeId ? ' is-active' : ''}" data-id="${f.id}">
-        <span title="${escapeAttr(f.name)}">📄 ${escapeHtml(f.name)}${
+        <span title="${escapeAttr(f.name)}">${escapeHtml(f.name)}${
           f.result ? ' ✓' : ''
         }</span>
         <button type="button" class="pi-remove-btn" data-id="${f.id}" title="Remove">✕</button>

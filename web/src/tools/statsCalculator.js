@@ -152,8 +152,10 @@ const resultsEl = document.getElementById('sc-results')
 
 function setMode(next) {
   mode = next
-  modeSingleBtn.classList.toggle('btn-primary', mode === 'single')
-  modeCompareBtn.classList.toggle('btn-primary', mode === 'compare')
+  modeSingleBtn.classList.toggle('is-active', mode === 'single')
+  modeSingleBtn.setAttribute('aria-pressed', String(mode === 'single'))
+  modeCompareBtn.classList.toggle('is-active', mode === 'compare')
+  modeCompareBtn.setAttribute('aria-pressed', String(mode === 'compare'))
   panelB.hidden = mode === 'single'
   datasetGrid.classList.toggle('sc-single-col', mode === 'single')
   titleA.textContent = mode === 'single' ? 'Dataset' : 'Group A'

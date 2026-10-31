@@ -94,7 +94,7 @@ function renderFileChipList() {
     .map(
       (e) => `
       <li data-id="${e.id}">
-        <span>📄 ${escapeHtml(e.name)}</span>
+        <span>${escapeHtml(e.name)}</span>
         <span>${(e.file.size / 1024).toFixed(1)} KB
           <button type="button" class="ac-remove-btn" data-id="${e.id}" title="Remove">✕</button>
         </span>
@@ -297,7 +297,7 @@ function renderResults() {
           </figure>
         </div>
         <div class="btn-row" style="margin-top: 0.75rem;">
-          <button class="btn" data-action="download" ${e.cropCanvas ? '' : 'disabled'}>⬇ Download PNG</button>
+          <button class="btn" data-action="download" ${e.cropCanvas ? '' : 'disabled'}>↓ Download PNG</button>
           <button class="btn btn-danger" data-action="remove" style="flex: 0 0 auto;">Remove</button>
         </div>
       </div>`

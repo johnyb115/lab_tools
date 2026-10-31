@@ -83,7 +83,7 @@ match the group's previous free-tier Streamlit Cloud setup:
 web/
   index.html, voltammetry.html, ...   one entry HTML per tool
   src/
-    style.css                         shared dark-theme design system
+    style.css                         shared light/dark design system (see ../DESIGN.md)
     shared/                           nav, dropzone, file parsing, Plotly setup, download/escape helpers
     tools/                            one JS module per tool page
   vite.config.js                      multi-page build config (base: './')

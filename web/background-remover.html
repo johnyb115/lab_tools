@@ -17,9 +17,6 @@
     #result-canvas { cursor: crosshair; touch-action: none; }
     .brush-btn-row { display: flex; gap: 0.5rem; }
     .brush-btn { flex: 1; }
-    .brush-btn.is-active {
-      background: var(--accent); border-color: var(--accent); color: #061224;
-    }
   </style>
 </head>
 <body>
@@ -27,7 +24,7 @@
 
   <main class="site-main">
     <div class="page-header">
-      <h1>🪄 Background Remover</h1>
+      <h1>Background Remover</h1>
       <p>
         Cuts the background out of a photo entirely in your browser using a small AI
         segmentation model, and gives you back a transparent PNG. Your images are never
@@ -107,8 +104,8 @@
           <div class="field">
             <label>Brush mode</label>
             <div class="brush-btn-row">
-              <button class="btn brush-btn is-active" id="erase-mode-btn" type="button">🧽 Erase</button>
-              <button class="btn brush-btn" id="restore-mode-btn" type="button">🖌️ Restore</button>
+              <button class="btn brush-btn is-active" id="erase-mode-btn" type="button">Erase</button>
+              <button class="btn brush-btn" id="restore-mode-btn" type="button">Restore</button>
             </div>
           </div>
 

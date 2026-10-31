@@ -69,11 +69,8 @@
       cursor: pointer;
       font-size: 0.78rem;
     }
-    .fc-grid-presets button:hover,
-    .fc-grid-presets button.is-active {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
+    .fc-grid-presets button:hover { border-color: var(--text); color: var(--text); }
+    .fc-grid-presets button.is-active { background: var(--text); border-color: var(--text); color: var(--bg); }
     .fc-custom-grid {
       display: flex;
       align-items: center;
@@ -130,7 +127,7 @@
 
   <main class="site-main">
     <div class="page-header">
-      <h1>🖼️ Figure Panel Composer</h1>
+      <h1>Figure Panel Composer</h1>
       <p>
         Arrange multiple images into a publication-ready figure panel with labels.
         Everything runs locally in your browser — nothing is uploaded.
@@ -143,7 +140,7 @@
           <h2>Images</h2>
           <div id="fc-dropzone" class="dropzone">
             <input id="fc-file-input" type="file" accept="image/*" multiple />
-            <p>📤 Click or drag images here (PNG, JPG, ...) — multiple files supported</p>
+            <p>Click or drag images here (PNG, JPG, ...) — multiple files supported</p>
           </div>
           <ul id="fc-image-list"></ul>
           <button id="fc-clear-btn" class="btn btn-danger" style="margin-top:0.4rem" hidden>Clear all</button>

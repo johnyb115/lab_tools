@@ -69,7 +69,7 @@
 
   <main class="site-main">
     <div class="page-header">
-      <h1>🎯 Uncertainty &amp; Stats</h1>
+      <h1>Uncertainty &amp; Stats</h1>
       <p>
         Paste or upload numbers to get descriptive statistics and a confidence interval, or
         compare two independent samples with Welch's t-test. Everything is computed locally in
@@ -78,7 +78,7 @@
     </div>
 
     <div class="sc-mode-row">
-      <button type="button" class="btn btn-primary" id="sc-mode-single">Single dataset</button>
+      <button type="button" class="btn is-active" id="sc-mode-single" aria-pressed="true">Single dataset</button>
       <button type="button" class="btn" id="sc-mode-compare">Compare two datasets (t-test)</button>
     </div>
 
@@ -102,7 +102,7 @@
         <div class="sc-or-divider">or upload a file</div>
         <div id="sc-dropzone-a" class="dropzone">
           <input id="sc-file-input-a" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" />
-          <p>📤 Click or drag a CSV / XLSX file here</p>
+          <p>Click or drag a CSV / XLSX file here</p>
         </div>
         <div class="field" id="sc-column-field-a" hidden>
           <label for="sc-column-select-a">Column</label>
@@ -120,7 +120,7 @@
         <div class="sc-or-divider">or upload a file</div>
         <div id="sc-dropzone-b" class="dropzone">
           <input id="sc-file-input-b" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" />
-          <p>📤 Click or drag a CSV / XLSX file here</p>
+          <p>Click or drag a CSV / XLSX file here</p>
         </div>
         <div class="field" id="sc-column-field-b" hidden>
           <label for="sc-column-select-b">Column</label>

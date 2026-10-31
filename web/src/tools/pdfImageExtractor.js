@@ -201,7 +201,7 @@ function renderResults() {
               <img src="${img.url}" alt="${escapeHtml(img.name)}" />
               <div class="pie-card__meta">
                 <span class="badge">${img.width}×${img.height}px</span>
-                <button type="button" class="btn pie-dl" data-name="${escapeHtml(img.name)}">⬇ PNG</button>
+                <button type="button" class="btn pie-dl" data-name="${escapeHtml(img.name)}">↓ PNG</button>
               </div>
             </div>`
             )

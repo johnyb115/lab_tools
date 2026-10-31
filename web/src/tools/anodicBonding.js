@@ -292,7 +292,7 @@ function readTokens() {
   }
 }
 const MONO = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
-const LABEL = '600 12px Inter, ui-sans-serif, system-ui, sans-serif'
+const LABEL = '600 12px "Geist Variable", ui-sans-serif, system-ui, sans-serif'
 function fmtI(x) {
   if (x >= 1e-3) return +(x * 1e3).toPrecision(2) + ' mA'
   if (x >= 1e-6) return +(x * 1e6).toPrecision(2) + ' µA'

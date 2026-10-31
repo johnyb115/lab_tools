@@ -1,2 +1,6 @@
 existing_scripts/
 .mcp.json
+
+# Impeccable working files
+.impeccable/mocks/
+.impeccable/review/

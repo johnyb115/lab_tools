@@ -4,369 +4,45 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lab Tools</title>
+  <meta name="description" content="Browser-based research utilities for electrochemistry, data analysis and figures. Files never leave your machine." />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/src/style.css" />
-  <script>(function(){var t=localStorage.getItem("lab-tools-theme");if(!t)t=matchMedia("(prefers-color-scheme:light)").matches?"light":"dark";document.documentElement.dataset.theme=t})()</script>
+  <script>(function(){var t;try{t=localStorage.getItem("lab-tools-theme")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme:light)").matches?"light":"dark";document.documentElement.dataset.theme=t})()</script>
 </head>
 <body>
   <header id="site-header" class="site-header"></header>
 
   <main class="site-main">
-    <div class="hero">
-      <div class="hero__icon">🧪</div>
-      <h1>Lab Tools</h1>
-      <p>
-        Browser-based research utilities for electrochemistry, data analysis,
-        image processing, and more. Everything runs locally — files never leave your browser.
-      </p>
-      <div class="search-wrap">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-          <circle cx="6.5" cy="6.5" r="5" /><path d="m10 10 4.5 4.5" />
-        </svg>
-        <input class="search-input" id="tool-search" type="search" placeholder="Search tools..." autocomplete="off" />
+    <section class="home-intro">
+      <div>
+        <h1>Research utilities that run in your browser. <span>Files never leave your machine.</span></h1>
+        <p class="home-intro__meta">
+          <span><b id="tool-total">24</b> tools</span>
+          <span><b>5</b> categories</span>
+          <span><b>0</b> uploads</span>
+          <span>open source</span>
+        </p>
       </div>
-      <div class="hero__meta">
-        <span id="tool-count">24 tools</span>
-        <span class="hero__meta-dot"></span>
-        <span>Open source</span>
-        <span class="hero__meta-dot"></span>
-        <span>No backend</span>
+      <div class="finder" role="search">
+        <label class="finder__field">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="6.5" cy="6.5" r="5" /><path d="m10 10 4.5 4.5" /></svg>
+          <span class="sr-only">Search tools</span>
+          <input id="tool-search" type="search" placeholder="Search by tool, method or file type…" autocomplete="off" spellcheck="false" />
+          <kbd>/</kbd>
+        </label>
+        <div class="cat-filter" id="cat-filter" aria-label="Filter by category"></div>
       </div>
-    </div>
+    </section>
 
-    <div id="tool-categories">
-      <!-- Electrochemistry -->
-      <div class="category-section" data-category="electrochemistry">
-        <div class="category-header">
-          <span class="category-header__icon">⚡</span>
-          <h2>Electrochemistry</h2>
-          <span class="category-header__count">4 tools</span>
-        </div>
-        <div class="card-grid">
-          <a class="tool-card" href="./voltammetry.html" data-keywords="voltammetry cv dpv autolab nova scan cyclic differential pulse">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">⚡</span>
-              <div class="tool-card__title">Voltammetry (CV/DPV)</div>
-            </div>
-            <p class="tool-card__desc">
-              Upload Autolab/NOVA CV or DPV exports, pick a scan range, and get an interactive
-              combined plot. Batch-export processed CSVs as a ZIP.
-            </p>
-            <span class="tool-card__badge">CSV / TXT</span>
-          </a>
-
-          <a class="tool-card" href="./eis-plotter.html" data-keywords="eis impedance spectroscopy nyquist bode">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🌀</span>
-              <div class="tool-card__title">EIS Plotter</div>
-            </div>
-            <p class="tool-card__desc">
-              Load impedance spectroscopy data and get Nyquist and Bode plots, with per-file
-              column mapping and overlay of multiple runs.
-            </p>
-            <span class="tool-card__badge">CSV / ASCII / XLSX</span>
-          </a>
-
-          <a class="tool-card" href="./four-point-probe.html" data-keywords="four point probe sheet resistance resistivity iv sweep ossila">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🧮</span>
-              <div class="tool-card__title">Four-Point Probe</div>
-            </div>
-            <p class="tool-card__desc">
-              Fit I-V sweeps, compute sheet resistance, and apply the Ossila rectangular-geometry
-              correction. Batch multiple runs of one sample.
-            </p>
-            <span class="tool-card__badge">ASC / CSV / TXT</span>
-          </a>
-
-          <a class="tool-card" href="./peak-integrator.html" data-keywords="peak integrate area height baseline chromatography">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">⛰️</span>
-              <div class="tool-card__title">Peak Integrator</div>
-            </div>
-            <p class="tool-card__desc">
-              Load a curve, click two baseline points, and get peak height and integrated area
-              (e.g. for CV/DPV peaks or chromatography traces).
-            </p>
-            <span class="tool-card__badge">CSV / ASCII / XLSX</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Data & Analysis -->
-      <div class="category-section" data-category="data-analysis">
-        <div class="category-header">
-          <span class="category-header__icon">📊</span>
-          <h2>Data &amp; Analysis</h2>
-          <span class="category-header__count">8 tools</span>
-        </div>
-        <div class="card-grid">
-          <a class="tool-card" href="./universal-plotter.html" data-keywords="universal plotter plot chart graph csv xlsx ascii xy">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">📈</span>
-              <div class="tool-card__title">Universal Data Plotter</div>
-            </div>
-            <p class="tool-card__desc">
-              Load any CSV, ASCII or XLSX table, choose X/Y columns, toggle individual traces
-              on and off, and customize axes, colors and scales.
-            </p>
-            <span class="tool-card__badge">CSV / ASCII / XLSX</span>
-          </a>
-
-          <a class="tool-card" href="./curve-fit.html" data-keywords="curve fit fitting linear polynomial exponential gaussian power logarithmic arrhenius levenberg marquardt">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">📐</span>
-              <div class="tool-card__title">Curve Fitting</div>
-            </div>
-            <p class="tool-card__desc">
-              Fit data to linear, polynomial, exponential, Gaussian, power-law, logarithmic
-              or Arrhenius models with Levenberg-Marquardt optimization.
-            </p>
-            <span class="tool-card__badge">CSV / TXT / XLSX</span>
-          </a>
-
-          <a class="tool-card" href="./data-smoother.html" data-keywords="smooth data savitzky golay moving average gaussian median exponential filter noise">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">〰️</span>
-              <div class="tool-card__title">Data Smoother</div>
-            </div>
-            <p class="tool-card__desc">
-              Smooth noisy data with Savitzky-Golay, moving average, Gaussian, median
-              or exponential moving average filters. Compare before &amp; after.
-            </p>
-            <span class="tool-card__badge">CSV / TXT / XLSX</span>
-          </a>
-
-          <a class="tool-card" href="./stats-calculator.html" data-keywords="statistics mean standard deviation sem confidence interval t-test uncertainty">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🎯</span>
-              <div class="tool-card__title">Uncertainty &amp; Stats</div>
-            </div>
-            <p class="tool-card__desc">
-              Mean, SD, SEM and confidence intervals for one dataset, or a two-sample t-test
-              to compare two.
-            </p>
-            <span class="tool-card__badge">Utility</span>
-          </a>
-
-          <a class="tool-card" href="./linspace.html" data-keywords="linspace generate evenly spaced numbers sequence">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🔢</span>
-              <div class="tool-card__title">Linspace Generator</div>
-            </div>
-            <p class="tool-card__desc">
-              Generate evenly spaced numbers between a min and max and download them as CSV.
-            </p>
-            <span class="tool-card__badge">Utility</span>
-          </a>
-
-          <a class="tool-card" href="./baseline-correction.html" data-keywords="baseline correction subtract polynomial als rubber band convex hull">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">📉</span>
-              <div class="tool-card__title">Baseline Correction</div>
-            </div>
-            <p class="tool-card__desc">
-              Remove baseline drift with linear, polynomial, ALS (asymmetric least squares),
-              or rubber-band / convex-hull methods.
-            </p>
-            <span class="tool-card__badge">CSV / TXT / XLSX</span>
-          </a>
-
-          <a class="tool-card" href="./data-normalizer.html" data-keywords="normalize min-max z-score area custom range scale">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">⚖️</span>
-              <div class="tool-card__title">Data Normalizer</div>
-            </div>
-            <p class="tool-card__desc">
-              Normalize data with Min-Max, Z-Score, divide-by-max, area normalization,
-              or a custom range. Compare original and normalized side by side.
-            </p>
-            <span class="tool-card__badge">CSV / TXT / XLSX</span>
-          </a>
-
-          <a class="tool-card" href="./interpolation.html" data-keywords="interpolation resample cubic spline linear nearest neighbor upsample downsample">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🔗</span>
-              <div class="tool-card__title">Interpolation &amp; Resampling</div>
-            </div>
-            <p class="tool-card__desc">
-              Resample data with linear, cubic spline, or nearest-neighbor interpolation
-              to a uniform grid of N points.
-            </p>
-            <span class="tool-card__badge">CSV / TXT / XLSX</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Image & Figures -->
-      <div class="category-section" data-category="image-figures">
-        <div class="category-header">
-          <span class="category-header__icon">🖼️</span>
-          <h2>Image &amp; Figures</h2>
-          <span class="category-header__count">7 tools</span>
-        </div>
-        <div class="card-grid">
-          <a class="tool-card" href="./figure-composer.html" data-keywords="figure panel composer arrange label publication grid image pptx">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🖼️</span>
-              <div class="tool-card__title">Figure Panel Composer</div>
-            </div>
-            <p class="tool-card__desc">
-              Arrange multiple images into a publication-ready figure panel with labels
-              (a), (b), (c) and export as PNG, SVG, or PPTX.
-            </p>
-            <span class="tool-card__badge">PNG / JPG</span>
-          </a>
-
-          <a class="tool-card" href="./arrow-generator.html" data-keywords="arrow annotation generator svg pptx powerpoint reaction equilibrium curved elbow scientific illustration">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">➜</span>
-              <div class="tool-card__title">Arrow &amp; Annotation Generator</div>
-            </div>
-            <p class="tool-card__desc">
-              Straight, curved, or elbow arrows with real arrowhead geometry (not SVG markers) so
-              they survive into PowerPoint. Straight/elbow also export as native editable PPTX shapes.
-            </p>
-            <span class="tool-card__badge">SVG / PNG / PPTX</span>
-          </a>
-
-          <a class="tool-card" href="./plot-digitizer.html" data-keywords="plot digitizer extract data points image graph screenshot">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🖼️</span>
-              <div class="tool-card__title">Plot Digitizer</div>
-            </div>
-            <p class="tool-card__desc">
-              Turn a graph screenshot back into numbers. Calibrate the axes, click on a curve's
-              color, and extract its data points to CSV.
-            </p>
-            <span class="tool-card__badge">PNG / JPG</span>
-          </a>
-
-          <a class="tool-card" href="./auto-crop.html" data-keywords="auto crop trim whitespace margin image">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">✂️</span>
-              <div class="tool-card__title">Image Auto-Crop</div>
-            </div>
-            <p class="tool-card__desc">
-              Automatically trim uniform white-space margins around an uploaded image.
-            </p>
-            <span class="tool-card__badge">PNG / JPG</span>
-          </a>
-
-          <a class="tool-card" href="./background-remover.html" data-keywords="background remove cut transparent png photo">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🪄</span>
-              <div class="tool-card__title">Background Remover</div>
-            </div>
-            <p class="tool-card__desc">
-              Cut the background out of a photo entirely in-browser and download a transparent PNG.
-            </p>
-            <span class="tool-card__badge">PNG / JPG</span>
-          </a>
-
-          <a class="tool-card" href="./scale-bar.html" data-keywords="scale bar calibration micrograph measure distance">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">📏</span>
-              <div class="tool-card__title">Scale Bar Calibration</div>
-            </div>
-            <p class="tool-card__desc">
-              Click two points a known distance apart on a micrograph or photo and burn a
-              calibrated scale bar into a copy of the image.
-            </p>
-            <span class="tool-card__badge">PNG / JPG</span>
-          </a>
-
-          <a class="tool-card" href="./pdf-image-extractor.html" data-keywords="pdf image extract figure pull embedded png">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">📤</span>
-              <div class="tool-card__title">PDF Image Extractor</div>
-            </div>
-            <p class="tool-card__desc">
-              Pull the embedded figures back out of a PDF at their native pixel resolution as
-              individual PNGs.
-            </p>
-            <span class="tool-card__badge">PDF</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Converters & Utilities -->
-      <div class="category-section" data-category="converters-utilities">
-        <div class="category-header">
-          <span class="category-header__icon">🔧</span>
-          <h2>Converters &amp; Utilities</h2>
-          <span class="category-header__count">4 tools</span>
-        </div>
-        <div class="card-grid">
-          <a class="tool-card" href="./table-converter.html" data-keywords="table format converter csv tsv xlsx json convert">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🔁</span>
-              <div class="tool-card__title">Table Format Converter</div>
-            </div>
-            <p class="tool-card__desc">
-              Convert between CSV, TSV, XLSX and JSON tables, with a preview before you download.
-            </p>
-            <span class="tool-card__badge">CSV / TSV / XLSX / JSON</span>
-          </a>
-
-          <a class="tool-card" href="./unit-converter.html" data-keywords="unit converter reference electrode agcl sce rhe dilution molarity energy pressure temperature">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🔬</span>
-              <div class="tool-card__title">Lab Unit Converter</div>
-            </div>
-            <p class="tool-card__desc">
-              Reference electrode conversions (Ag/AgCl, SCE, RHE), dilution calculator,
-              sheet resistance, molarity, energy, pressure and temperature.
-            </p>
-            <span class="tool-card__badge">Utility</span>
-          </a>
-
-          <a class="tool-card" href="./color-checker.html" data-keywords="color palette checker colorblind simulation wcag contrast accessibility">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🎨</span>
-              <div class="tool-card__title">Color Palette Checker</div>
-            </div>
-            <p class="tool-card__desc">
-              Preview figure colors under colorblind simulation (protanopia, deuteranopia,
-              tritanopia), check WCAG contrast ratios and pair distinguishability.
-            </p>
-            <span class="tool-card__badge">Accessibility</span>
-          </a>
-
-          <a class="tool-card" href="./pcb-qr.html" data-keywords="pcb qr code generator traces vias circuit board svg">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">🔲</span>
-              <div class="tool-card__title">PCB QR Generator</div>
-            </div>
-            <p class="tool-card__desc">
-              Generate QR codes with decorative PCB-style traces and vias. Customize colors,
-              geometry, and download as layered SVG.
-            </p>
-            <span class="tool-card__badge">SVG</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Simulators -->
-      <div class="category-section" data-category="simulators">
-        <div class="category-header">
-          <span class="category-header__icon">🎛️</span>
-          <h2>Simulators</h2>
-          <span class="category-header__count">1 tool</span>
-        </div>
-        <div class="card-grid">
-          <a class="tool-card" href="./anodic-bonding.html" data-keywords="anodic bonding simulator glass silicon pyrex wafer bond front point electrode plate electrode sodium depletion field assisted mems">
-            <div class="tool-card__header">
-              <span class="tool-card__icon">♨️</span>
-              <div class="tool-card__title">Anodic Bonding Simulator</div>
-            </div>
-            <p class="tool-card__desc">
-              Watch the bond front spread from a point or plate electrode across a 4" Pyrex/Si stack.
-              Shows the voltage in the glass, current and bonding time versus temperature and voltage.
-            </p>
-            <span class="tool-card__badge">Simulation</span>
-          </a>
-        </div>
+    <div class="reticle" id="reticle">
+      <i class="reticle__cross reticle__cross--tl" aria-hidden="true"></i>
+      <i class="reticle__cross reticle__cross--tr" aria-hidden="true"></i>
+      <i class="reticle__cross reticle__cross--bl" aria-hidden="true"></i>
+      <i class="reticle__cross reticle__cross--br" aria-hidden="true"></i>
+      <div id="tool-index"></div>
+      <div class="reticle__empty" id="tool-empty" hidden>
+        <p>No tool matches “<span id="tool-empty-q"></span>”. Try a file type like “xlsx” or a method like “fit”.</p>
+        <button class="btn" type="button" id="tool-reset">Show all tools</button>
       </div>
     </div>
   </main>

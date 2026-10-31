@@ -256,8 +256,8 @@ function renderGeometrySvg(lMm, wMm, sMm) {
   return `
 <svg viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
   <style>
-    .rect { fill: #4c9aff1a; stroke: #2a3140; stroke-width: 2; }
-    .probe { fill: #4c9aff; }
+    .rect { fill: #3a62d61a; stroke: #2a3140; stroke-width: 2; }
+    .probe { fill: #3a62d6; }
     .axis { stroke: #9aa4b2; stroke-width: 2; marker-end: url(#fpp-arrow); }
     .axisthin { stroke: #9aa4b2; stroke-width: 1.5; marker-end: url(#fpp-arrow); marker-start: url(#fpp-arrow-start); }
     .label { fill: #e6e9ef; font-size: 15px; font-family: ui-sans-serif, system-ui, sans-serif; }
@@ -333,7 +333,7 @@ const svgWrap = document.getElementById('fpp-geometry-svg')
 const resultsEl = document.getElementById('fpp-results')
 
 function renderFileList() {
-  fileListEl.innerHTML = state.files.map((f) => `<li>📄 ${escapeHtml(f.name)}</li>`).join('')
+  fileListEl.innerHTML = state.files.map((f) => `<li>${escapeHtml(f.name)}</li>`).join('')
 }
 
 function renderGeometryPreview() {

@@ -15,36 +15,38 @@ npm run build      # production build into web/dist/
 
 ```
 web/
-├── index.html                   # Home page with tool cards
+├── index.html                   # Home page shell (index rendered from tools.js)
 ├── <tool-name>.html             # One HTML page per tool
 ├── privacy.html                 # Privacy & security disclosure
 ├── vite.config.js               # Vite multi-page config (rollup inputs)
 ├── package.json
 └── src/
-    ├── style.css                # Single shared dark-theme design system
+    ├── style.css                # Shared design system (light + dark), see DESIGN.md
     ├── shared/
-    │   ├── nav.js               # Header + footer injection (NAV_ITEMS array)
+    │   ├── tools.js             # Tool registry: categories, codes, summaries, formats
+    │   ├── glyphs.js            # Line drawings of each tool's output (120×60 SVG)
+    │   ├── nav.js               # Header, tool finder, page-header decoration, footer
     │   ├── dropzone.js          # Drag-and-drop file upload helper
     │   ├── download.js          # Client-side download helpers (blob, CSV, text)
     │   ├── dom.js               # HTML escaping utilities
     │   ├── parseTable.js        # CSV/XLSX/ASCII table parser
-    │   └── plotlySetup.js       # Shared Plotly dark-theme config
+    │   └── plotlySetup.js       # Shared Plotly theme-aware config
     └── tools/
         └── <tool-name>.js       # One JS module per tool
 ```
 
 ## Design system
 
-Single dark theme using CSS variables defined in `web/src/style.css`:
+"Mask Set": full spec in `/DESIGN.md`. Tokens are CSS variables in `web/src/style.css`. Light and dark themes are set on `<html data-theme>`.
 
-- `--bg`, `--bg-elev`, `--bg-elev-2` — background layers
-- `--border`, `--text`, `--text-dim` — chrome
-- `--accent` (#4c9aff), `--accent-2`, `--danger`, `--warning` — semantic colors
-- `--radius`, `--radius-sm` — corner radii
+- `--bg`, `--bg-elev`, `--bg-elev-2/3`, `--border`, `--text`, `--text-dim`, `--text-muted`: neutrals
+- `--ox-e/d/i/c/s`: one oxide colour per category. On a tool page `--cat` (and `--accent`) is that page's category colour, set by `initChrome` through `data-cat`.
+- `--amber`: only for `.btn-primary` and focus. Selected toggles use `.btn.is-active` (ink fill).
+- Fonts: Geist and Geist Mono, self-hosted through `@fontsource-variable` (no Google Fonts).
 
-**Layout**: most tools use `layout-sidebar` (320px aside + 1fr content area). Sidebar holds controls in `.panel` sections; content area shows canvas/output.
+**Layout**: most tools use `layout-sidebar` (320px aside + 1fr content area). The sidebar holds controls in `.panel` sections; the content area shows the canvas/output (`.plot-area`).
 
-**Components**: `.btn`, `.btn-primary`, `.btn-danger`, `.dropzone`, `.field`, `.field-row`, `.alert`, `.empty-state`, `.tool-card`.
+**Components**: `.btn`, `.btn-primary`, `.btn-danger`, `.dropzone`, `.field`, `.field-row`, `.alert`, `.empty-state`, `.category-header`. No emoji in titles, buttons or dropzones.
 
 ## How to add a new tool
 
@@ -68,7 +70,7 @@ Follow the pattern in `linspace.html` (simplest example):
   <header id="site-header" class="site-header"></header>
   <main class="site-main">
     <div class="page-header">
-      <h1>ICON Tool Name</h1>
+      <h1>Tool Name</h1>
       <p>One-line description.</p>
     </div>
     <div class="layout-sidebar">
@@ -99,11 +101,12 @@ initChrome('<tool-id>')
 
 Use shared helpers: `initDropzone` for file upload, `downloadBlob`/`downloadCSV` for exports, `escapeHtml` for user text in innerHTML.
 
-### 3. Register the tool in three places
+### 3. Register the tool in two places
 
-1. **`web/src/shared/nav.js`** — add entry to `NAV_ITEMS` array (id, label, href, icon)
-2. **`web/vite.config.js`** — add to `rollupOptions.input`: `toolName: page('<tool-name>.html')`
-3. **`web/index.html`** — add a `<a class="tool-card">` block in the `.card-grid`
+1. **`web/src/shared/tools.js`**: add an entry to its category (`id`, `code`, `label`, `href`, `glyph`, `summary` (verb-first, what you get out), `formats`, `keywords`). The home index, the tool finder and the page header kicker/glyph are all rendered from this.
+2. **`web/vite.config.js`**: add to `rollupOptions.input`: `toolName: page('<tool-name>.html')`
+
+Then add a drawing of the tool's output to `web/src/shared/glyphs.js` (120×60 viewBox, `currentColor`, `.g-ax` for axes/guides, `.g-soft` for fills) and reference it by `glyph`.
 
 ### 4. (If needed) Add npm dependencies
 

@@ -446,7 +446,7 @@ function updatePlot() {
     y: Array.from(smoothedY),
     mode: 'lines',
     name: 'Smoothed',
-    line: { color: '#4c9aff', width: 2 },
+    line: { color: '#3a62d6', width: 2 },
   })
 
   const layout = getLayout()

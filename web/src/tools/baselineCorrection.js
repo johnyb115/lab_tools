@@ -578,7 +578,7 @@ function updatePlot() {
       y: Array.from(yData),
       mode: 'lines',
       name: 'Original',
-      line: { color: '#4c9aff', width: 1.5 },
+      line: { color: '#3a62d6', width: 1.5 },
     },
     {
       x: xData,

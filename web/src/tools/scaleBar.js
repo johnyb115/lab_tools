@@ -137,7 +137,7 @@ function loadImageFile(file) {
     calibrateBtn.disabled = false
     emptyCanvas.style.display = 'none'
     canvasWrap.style.display = 'block'
-    fileChip.innerHTML = `<li><span>📄 ${escapeAttr(file.name)}</span><span>${image.naturalWidth}×${image.naturalHeight}px</span></li>`
+    fileChip.innerHTML = `<li><span>${escapeAttr(file.name)}</span><span>${image.naturalWidth}×${image.naturalHeight}px</span></li>`
 
     updateCanvasModeClass()
     renderCalibBadges()
@@ -802,7 +802,7 @@ downloadPptxBtn.addEventListener('click', async () => {
     alert('PPTX generation failed: ' + (err?.message || err))
   } finally {
     downloadPptxBtn.disabled = false
-    downloadPptxBtn.textContent = '⬇ PPTX (editable)'
+    downloadPptxBtn.textContent = '↓ PPTX (editable)'
   }
 })
 

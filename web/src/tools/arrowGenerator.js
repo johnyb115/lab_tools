@@ -615,7 +615,7 @@ downloadPptxBtn.addEventListener('click', async () => {
     downloadBlob(pptxBlob, 'arrow.pptx')
   } finally {
     downloadPptxBtn.disabled = !(p1 && p2 && style.shape !== 'curved' && PPTX_ARROW_TYPE[style.headStyle] != null)
-    downloadPptxBtn.textContent = '⬇ PPTX'
+    downloadPptxBtn.textContent = '↓ PPTX'
   }
 })
 

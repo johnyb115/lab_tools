@@ -92,7 +92,7 @@ function loadImageFile(file) {
 
     emptyCanvas.style.display = 'none'
     canvasWrap.style.display = 'block'
-    fileChip.innerHTML = `<li><span>📄 ${escapeAttr(file.name)}</span><span>${canvas.width}×${canvas.height}px</span></li>`
+    fileChip.innerHTML = `<li><span>${escapeAttr(file.name)}</span><span>${canvas.width}×${canvas.height}px</span></li>`
 
     updateCanvasModeClass()
     renderCalibBadges()
@@ -336,7 +336,7 @@ function renderSeriesList() {
       </div>
       <div class="pd-series-row2">
         <span class="pd-series-swatch" style="background:${s.swatchColor || 'transparent'}${s.swatchColor ? '' : ';border-style:dashed'}"></span>
-        <button class="btn" type="button">${isPicking ? '🖱️ Click on the curve…' : s.swatchColor ? '🎯 Re-pick color' : '🎯 Pick color from image'}</button>
+        <button class="btn" type="button">${isPicking ? 'Click on the curve…' : s.swatchColor ? 'Re-pick color' : 'Pick color from image'}</button>
       </div>
       <div class="pd-series-row2">
         <label style="font-size:0.78rem;color:var(--text-dim);width:5.2rem;">Tolerance</label>
