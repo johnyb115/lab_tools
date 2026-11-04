@@ -119,6 +119,13 @@ const G = {
     <path d="M90 22H100L106 16M86 44H112"/>
     <g class="g-ring"><circle cx="8" cy="12" r="2.6"/><circle cx="8" cy="30" r="2.6"/><circle cx="8" cy="48" r="2.6"/><circle cx="106" cy="16" r="2.6"/><circle cx="112" cy="44" r="2.6"/></g>`,
 
+  cert: `<path class="g-ax" d="M50 8H90V58M46 4H86"/>
+    <rect class="g-soft" x="34" y="12" width="44" height="46"/><rect x="34" y="12" width="44" height="46"/>
+    <path class="g-bar" d="M39 20H62"/><path d="M39 25H50"/>
+    <path d="M39 35H73"/><path class="g-ax" d="M39 41H66M39 45H60"/>
+    <path d="M58 53H73"/>
+    <path class="g-ax" d="M78 18H96L102 24H112M78 22H94"/><circle class="g-ring" cx="112" cy="24" r="2.4"/>`,
+
   bonding: `<rect class="g-soft" x="12" y="16" width="96" height="16"/><rect x="12" y="16" width="96" height="16"/>
     <rect class="g-fill" x="12" y="32" width="96" height="11"/>
     <path d="M60 3V16"/><path class="g-bar" d="M22 50H98"/>

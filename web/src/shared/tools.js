@@ -170,6 +170,12 @@ export const CATEGORIES = [
         formats: 'Outputs SVG',
         keywords: 'pcb qr code generator traces vias circuit board svg',
       },
+      {
+        id: 'certificate-maker', code: 'CRT', label: 'Certificate Maker', href: './certificate-maker.html', glyph: 'cert',
+        summary: 'Print certificates for a list of names as one PDF',
+        formats: 'XLSX · CSV → PDF',
+        keywords: 'certificate certifikat participation diploma attendance names list print pdf mail merge workshop course',
+      },
     ],
   },
   {

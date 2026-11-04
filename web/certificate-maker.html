@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Certificate Maker — Lab Tools</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <script>(function(){var t=localStorage.getItem("lab-tools-theme");if(!t)t=matchMedia("(prefers-color-scheme:light)").matches?"light":"dark";document.documentElement.dataset.theme=t})()</script>
+  <style>
+    .cm-preview { display: flex; flex-direction: column; gap: 10px; }
+    #cm-out { position: sticky; top: 72px; align-self: start; }
+    .cm-sheet { background: #e4e6e1; padding: 18px; display: flex; justify-content: center; border-radius: var(--radius-sm); }
+    [data-theme="dark"] .cm-sheet { background: #0b0d0f; }
+    .cm-sheet svg { height: max(420px, calc(100vh - 16rem)); width: auto; max-width: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.18); background: #fff; }
+    @media (max-width: 880px) { #cm-out { position: static; order: -1; } .cm-sheet { padding: 10px; } .cm-sheet svg { height: auto; width: 100%; } }
+    .cm-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .cm-bar .grow { flex: 1; min-width: 140px; }
+    .cm-bar .btn { width: auto; }
+    .cm-count { font: 12px var(--font-mono); color: var(--text-dim); }
+    .cm-note { font-size: 13px; color: var(--text-dim); margin: 6px 0 0; line-height: 1.45; }
+    .cm-logos { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .cm-logo { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); }
+    .cm-logo img { height: 22px; max-width: 110px; object-fit: contain; background: #fff; padding: 2px; }
+    .cm-logo span { flex: 1; font-size: 12px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cm-logo .btn { width: auto; padding: 2px 8px; height: 26px; min-height: 0; font-size: 12px; }
+    .cm-font { font: 12px var(--font-mono); color: var(--text-dim); margin-top: 4px; }
+    #cm-names { min-height: 150px; }
+    .cm-color { display: flex; gap: 0.5rem; align-items: center; }
+    .cm-color input[type="text"] { flex: 1; }
+  </style>
+</head>
+<body>
+  <header id="site-header" class="site-header"></header>
+  <main class="site-main">
+    <div class="page-header">
+      <h1>Certificate Maker</h1>
+      <p>Design a participation certificate and print it for a whole list of names as one PDF. Names, logos and fonts stay in your browser.</p>
+    </div>
+
+    <div class="layout-sidebar">
+      <aside>
+        <div class="panel">
+          <h2>Participants</h2>
+          <div class="dropzone" id="cm-drop">
+            <input type="file" id="cm-file" accept=".xlsx,.xls,.csv,.txt" />
+            Drop an Excel list here or click to browse
+          </div>
+          <div class="field" id="cm-col-field" hidden style="margin-top:10px">
+            <label for="cm-col">Column with names</label>
+            <select id="cm-col"></select>
+          </div>
+          <div class="field" style="margin-top:10px">
+            <label for="cm-names">Names, one per line, as they should be printed</label>
+            <textarea id="cm-names" spellcheck="false" placeholder="Mgr. Jana Nováková&#10;Ing. Petr Dvořák, Ph.D."></textarea>
+          </div>
+          <p class="cm-note">Names are never saved or uploaded. Closing the tab forgets them.</p>
+        </div>
+
+        <div class="panel">
+          <h2>Heading</h2>
+          <div class="field">
+            <label for="cm-preset">Language of the default texts</label>
+            <select id="cm-preset">
+              <option value="cs">Czech</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="cm-heading">Heading</label><input type="text" id="cm-heading" data-key="heading" /></div>
+            <div class="field"><label for="cm-subheading">Subheading</label><input type="text" id="cm-subheading" data-key="subheading" /></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Name line</h2>
+          <div class="field"><label for="cm-nameCaption">Caption under the name</label><input type="text" id="cm-nameCaption" data-key="nameCaption" /></div>
+          <div class="field"><label for="cm-alignName">Alignment</label><select id="cm-alignName" data-key="alignName"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div>
+        </div>
+
+        <div class="panel">
+          <h2>Event</h2>
+          <div class="field"><label for="cm-eventLabel">Label above the title</label><input type="text" id="cm-eventLabel" data-key="eventLabel" /></div>
+          <div class="field"><label for="cm-eventTitle">Event title</label><input type="text" id="cm-eventTitle" data-key="eventTitle" /></div>
+          <div class="field"><label for="cm-eventSubtitle">Subtitle</label><input type="text" id="cm-eventSubtitle" data-key="eventSubtitle" /></div>
+          <div class="field"><label for="cm-eventDetails">When and where the event took place</label><input type="text" id="cm-eventDetails" data-key="eventDetails" /></div>
+          <div class="field"><label for="cm-alignEvent">Alignment</label><select id="cm-alignEvent" data-key="alignEvent"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div>
+        </div>
+
+        <div class="panel">
+          <h2>Programme</h2>
+          <div class="field"><label for="cm-programLabel">Label</label><input type="text" id="cm-programLabel" data-key="programLabel" /></div>
+          <div class="field"><label for="cm-program">Items, one per line (leave empty to hide the programme)</label><textarea id="cm-program" data-key="program" rows="5"></textarea></div>
+          <div class="field"><label for="cm-alignProgram">Alignment</label><select id="cm-alignProgram" data-key="alignProgram"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div>
+        </div>
+
+        <div class="panel">
+          <h2>Signatures</h2>
+          <div class="field"><label for="cm-placeDate">Signed at (place and date of signing)</label><input type="text" id="cm-placeDate" data-key="placeDate" /></div>
+          <div class="field-row">
+            <div class="field"><label for="cm-sig1Name">Signatory</label><input type="text" id="cm-sig1Name" data-key="sig1Name" /></div>
+            <div class="field"><label for="cm-sig1Role">Position</label><input type="text" id="cm-sig1Role" data-key="sig1Role" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="cm-sig2Name">Second signatory</label><input type="text" id="cm-sig2Name" data-key="sig2Name" placeholder="optional" /></div>
+            <div class="field"><label for="cm-sig2Role">Position</label><input type="text" id="cm-sig2Role" data-key="sig2Role" placeholder="optional" /></div>
+          </div>
+          <div class="field"><label for="cm-alignSign">Layout</label><select id="cm-alignSign" data-key="alignSign"><option value="split">Date left, signature right</option><option value="mirror">Signature left, date right</option><option value="center">Centred</option></select></div>
+        </div>
+
+        <div class="panel">
+          <h2>Footer</h2>
+          <div class="field"><label for="cm-footer1">Line 1</label><input type="text" id="cm-footer1" data-key="footer1" /></div>
+          <div class="field"><label for="cm-footer2">Line 2</label><input type="text" id="cm-footer2" data-key="footer2" /></div>
+          <div class="field"><label for="cm-alignFooter">Alignment</label><select id="cm-alignFooter" data-key="alignFooter"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></div>
+          <div class="checkbox-row"><input type="checkbox" id="cm-footerBand" data-key="footerBand" /><label for="cm-footerBand">Coloured band (off saves ink)</label></div>
+        </div>
+
+        <div class="panel">
+          <h2>Look</h2>
+          <div class="field">
+            <label for="cm-primary">Main colour</label>
+            <div class="cm-color"><input type="color" id="cm-primary-picker" /><input type="text" id="cm-primary" data-key="primary" /></div>
+          </div>
+          <div class="field">
+            <label for="cm-accent">Accent colour</label>
+            <div class="cm-color"><input type="color" id="cm-accent-picker" /><input type="text" id="cm-accent" data-key="accent" /></div>
+          </div>
+          <div class="field">
+            <label for="cm-textColor">Text colour</label>
+            <div class="cm-color"><input type="color" id="cm-textColor-picker" /><input type="text" id="cm-textColor" data-key="textColor" /></div>
+          </div>
+          <div class="field">
+            <label for="cm-motif">Decoration (top right)</label>
+            <select id="cm-motif" data-key="motif"></select>
+          </div>
+          <hr class="sep" />
+          <div class="field">
+            <label>Logos (left to right, up to 4; SVG, PDF, AI, EPS, PNG or JPG)</label>
+            <div class="dropzone" id="cm-logo-drop">
+              <input type="file" id="cm-logo-file" accept=".svg,.pdf,.ai,.eps,.png,.jpg,.jpeg,image/svg+xml,application/pdf,application/postscript,image/png,image/jpeg" multiple />
+              Add logos
+            </div>
+            <div class="cm-logos" id="cm-logos"></div>
+            <p class="cm-note">SVG, PDF, AI and EPS logos stay vector in the PDF. PNG and JPG are printed at their own resolution. EPS needs a one-time 11 MB converter download.</p>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="cm-logoHeight">Logo height (mm)</label>
+              <input type="number" id="cm-logoHeight" data-key="logoHeight" min="6" max="20" step="0.5" />
+            </div>
+            <div class="field">
+              <label for="cm-alignLogos">Logo row</label>
+              <select id="cm-alignLogos" data-key="alignLogos"><option value="spread">Spread</option><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select>
+            </div>
+          </div>
+          <hr class="sep" />
+          <div class="field">
+            <label for="cm-font-preset">Font</label>
+            <select id="cm-font-preset">
+              <option value="vafle">Vafle VUT</option>
+              <option value="geist">Geist</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cm-font-reg">Own font, regular (TTF/OTF)</label>
+            <input type="file" id="cm-font-reg" accept=".ttf,.otf" />
+            <div class="cm-font" id="cm-font-reg-name"></div>
+          </div>
+          <div class="field">
+            <label for="cm-font-bold">Own font, bold (TTF/OTF)</label>
+            <input type="file" id="cm-font-bold" accept=".ttf,.otf" />
+            <div class="cm-font" id="cm-font-bold-name"></div>
+          </div>
+          <p class="cm-note">An own font is used only in this tab and only for your PDF; it is not uploaded anywhere.</p>
+        </div>
+
+        <div class="panel">
+          <h2>Template</h2>
+          <p class="cm-note" style="margin:0 0 10px">Texts, colours and logos are kept in this browser. Save a template file to reuse it elsewhere or share it.</p>
+          <div class="btn-row">
+            <button class="btn" id="cm-export" type="button">Save template</button>
+            <button class="btn" id="cm-import-btn" type="button">Load template</button>
+          </div>
+          <input type="file" id="cm-import" accept=".json,application/json" hidden />
+          <div class="btn-row" style="margin-top:8px"><button class="btn btn-danger" id="cm-reset" type="button">Reset to defaults</button></div>
+        </div>
+      </aside>
+
+      <section id="cm-out">
+        <div class="cm-preview">
+          <div class="cm-bar">
+            <select id="cm-which" class="grow" aria-label="Previewed certificate"></select>
+            <span class="cm-count" id="cm-count"></span>
+          </div>
+          <div class="cm-sheet" id="cm-sheet"><div class="empty-state">Loading fonts…</div></div>
+          <div id="cm-msg"></div>
+          <div class="cm-bar">
+            <input type="text" id="cm-filename" class="grow" value="certificates.pdf" aria-label="File name" />
+            <button class="btn" id="cm-blank" type="button" title="One certificate with a fillable name field">Fillable PDF</button>
+            <button class="btn btn-primary" id="cm-generate" type="button">Download PDF</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer id="site-footer" class="site-footer"></footer>
+  <script type="module" src="/src/tools/certificateMaker.js"></script>
+</body>
+</html>

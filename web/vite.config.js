@@ -34,6 +34,7 @@ export default defineConfig({
         interpolation: page('interpolation.html'),
         arrowGenerator: page('arrow-generator.html'),
         anodicBonding: page('anodic-bonding.html'),
+        certificateMaker: page('certificate-maker.html'),
         privacy: page('privacy.html'),
       },
     },
