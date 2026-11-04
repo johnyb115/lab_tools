@@ -12,9 +12,10 @@ import geistBoldUrl from '../assets/fonts/Geist-Bold.ttf?url'
 import vafleRegularUrl from '../assets/fonts/VafleVUT-Regular.ttf?url'
 import vafleBoldUrl from '../assets/fonts/VafleVUT-Bold.ttf?url'
 
+// psName/subtype: how the font is named when installed (used by the fillable field)
 const FONT_PRESETS = {
-  vafle: { regular: vafleRegularUrl, bold: vafleBoldUrl, label: 'Vafle VUT' },
-  geist: { regular: geistRegularUrl, bold: geistBoldUrl, label: 'Geist' },
+  vafle: { regular: vafleRegularUrl, bold: vafleBoldUrl, label: 'Vafle VUT', subtype: 'Type1' },
+  geist: { regular: geistRegularUrl, bold: geistBoldUrl, label: 'Geist', subtype: 'TrueType' },
 }
 
 initChrome('certificate-maker')
@@ -25,12 +26,13 @@ const $ = (id) => document.getElementById(id)
 
 const DEFAULT_LOOK = {
   primary: '#083777', accent: '#FBCA07', textColor: '#10243D', footerBand: true, motif: 'circuit',
-  logoHeight: 12, alignLogos: 'spread', fontPreset: 'vafle',
+  logoHeight: 12, alignLogos: 'spread', fontPreset: 'vafle', fieldFont: 'same',
   alignName: 'left', alignEvent: 'left', alignProgram: 'left', alignSign: 'split', alignFooter: 'left',
 }
 const CHOICES = {
   alignName: ['left', 'center', 'right'], alignEvent: ['left', 'center', 'right'], alignProgram: ['left', 'center', 'right'],
   alignFooter: ['left', 'center', 'right'], alignSign: ['split', 'mirror', 'center'], alignLogos: ['spread', 'left', 'center', 'right'],
+  fieldFont: ['same', 'helvetica'],
   motif: Object.keys(MOTIFS),
 }
 const defaults = (lang) => ({ lang, ...PRESETS[lang], ...DEFAULT_LOOK })
@@ -38,7 +40,7 @@ const defaults = (lang) => ({ lang, ...PRESETS[lang], ...DEFAULT_LOOK })
 let tpl = defaults('cs')
 let logos = [] // { name, mime, src, preview, w, h }, see certificate/logos.js
 let names = []
-const font = { regular: null, bold: null } // { bytes, fk, family, label }
+const font = { regular: null, bold: null } // { bytes, fk, family, label, subtype }
 let familySeq = 0
 
 // ------------------------------------------------------------ persistence
@@ -74,22 +76,23 @@ function load() {
 }
 
 // ------------------------------------------------------------------ fonts
-async function setFont(weight, bytes, label) {
+async function setFont(weight, bytes, label, subtype) {
   const fk = fontkit.create(bytes)
   if (!fk || typeof fk.layout !== 'function') throw new Error('Font collections (TTC) are not supported; use a single TTF or OTF.')
   const family = `cm-${weight}-${++familySeq}`
   const face = new FontFace(family, bytes)
   await face.load()
   document.fonts.add(face)
-  font[weight] = { bytes, fk, family, label }
+  const isCff = bytes[0] === 0x4f && bytes[1] === 0x54 && bytes[2] === 0x54 && bytes[3] === 0x4f
+  font[weight] = { bytes, fk, family, label, subtype: subtype || (isCff ? 'Type1' : 'TrueType') }
   $(`cm-font-${weight === 'regular' ? 'reg' : 'bold'}-name`).textContent = label
 }
 
 async function loadDefaultFonts() {
   const p = FONT_PRESETS[tpl.fontPreset] || FONT_PRESETS.vafle
   const [r, b] = await Promise.all([p.regular, p.bold].map((u) => fetch(u).then((res) => res.arrayBuffer())))
-  await setFont('regular', new Uint8Array(r), `${p.label} Regular`)
-  await setFont('bold', new Uint8Array(b), `${p.label} Bold`)
+  await setFont('regular', new Uint8Array(r), `${p.label} Regular`, p.subtype)
+  await setFont('bold', new Uint8Array(b), `${p.label} Bold`, p.subtype)
 }
 
 async function onFontFile(weight, file) {
@@ -305,6 +308,15 @@ function render() {
 }
 
 // -------------------------------------------------------------- download
+// Font for the fillable name field: the certificate's bold font by its installed name,
+// or Helvetica (null) when the user picks it or the font has no PostScript name.
+function fieldFont() {
+  if (tpl.fieldFont === 'helvetica') return null
+  const fk = font.bold.fk
+  const psName = (fk.postscriptName || '').replace(/[^\x21-\x7e]/g, '')
+  return psName ? { psName, subtype: font.bold.subtype, fk } : null
+}
+
 async function download(list, { fillable = false } = {}) {
   if (!font.regular || !font.bold) return
   const fk = fonts()
@@ -319,7 +331,10 @@ async function download(list, { fillable = false } = {}) {
       if (r.warnings.some((w) => w.includes('overflows'))) long.push(n)
       return r.items
     })
-    const bytes = await buildPdf(pages, logos, { regular: font.regular.bytes, bold: font.bold.bytes }, fk, { title: tpl.eventTitle || 'Certificates', field: fillable ? field : null })
+    const bytes = await buildPdf(pages, logos, { regular: font.regular.bytes, bold: font.bold.bytes }, fk, {
+      title: tpl.eventTitle || 'Certificates',
+      field: fillable ? { ...field, font: fieldFont() } : null,
+    })
     let fn = ($('cm-filename').value || 'certificates.pdf').trim()
     if (!/\.pdf$/i.test(fn)) fn += '.pdf'
     if (fillable) fn = fn.replace(/\.pdf$/i, '_fillable.pdf')

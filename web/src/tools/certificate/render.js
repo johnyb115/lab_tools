@@ -90,76 +90,44 @@ async function embedLogo(doc, logo, wMm, hMm) {
 }
 
 // Fillable name field on page 1 (for the blank certificate). field: { x, y, w, h } in mm,
-// align 'left' | 'center' | 'right', color hex.
+// align 'left' | 'center' | 'right', color hex, font (see below).
 //
-// PDF readers (Acrobat, Chrome/Edge, Firefox) draw typed text themselves with the font
-// named in the field's /DA. They do this reliably only with a *simple* font (one byte
-// per character), not with the CID fonts used for the rest of the page: with those,
-// typed text comes out as garbage. So the field gets its own simple embedding of the
-// bold font, encoded as Windows-1250 (all Czech, Slovak, Polish, Hungarian and German
-// letters), with the whole font file so any of those letters can be typed.
-const CP1250_HIGH = [0x20ac,0,0x201a,0,0x201e,0x2026,0x2020,0x2021,0,0x2030,0x0160,0x2039,0x015a,0x0164,0x017d,0x0179,0,0x2018,0x2019,0x201c,0x201d,0x2022,0x2013,0x2014,0,0x2122,0x0161,0x203a,0x015b,0x0165,0x017e,0x017a,0x00a0,0x02c7,0x02d8,0x0141,0x00a4,0x0104,0x00a6,0x00a7,0x00a8,0x00a9,0x015e,0x00ab,0x00ac,0x00ad,0x00ae,0x017b,0x00b0,0x00b1,0x02db,0x0142,0x00b4,0x00b5,0x00b6,0x00b7,0x00b8,0x0105,0x015f,0x00bb,0x013d,0x02dd,0x013e,0x017c,0x0154,0x00c1,0x00c2,0x0102,0x00c4,0x0139,0x0106,0x00c7,0x010c,0x00c9,0x0118,0x00cb,0x011a,0x00cd,0x00ce,0x010e,0x0110,0x0143,0x0147,0x00d3,0x00d4,0x0150,0x00d6,0x00d7,0x0158,0x016e,0x00da,0x0170,0x00dc,0x00dd,0x0162,0x00df,0x0155,0x00e1,0x00e2,0x0103,0x00e4,0x013a,0x0107,0x00e7,0x010d,0x00e9,0x0119,0x00eb,0x011b,0x00ed,0x00ee,0x010f,0x0111,0x0144,0x0148,0x00f3,0x00f4,0x0151,0x00f6,0x00f7,0x0159,0x016f,0x00fa,0x0171,0x00fc,0x00fd,0x0163,0x02d9]
-const FIELD_FONT = 'CertName'
+// PDF readers draw typed text themselves, and Acrobat Reader types only with fonts
+// installed on the computer: a font embedded in the PDF is ignored while typing. So the
+// field never embeds a font. It either names the certificate's bold font (field.font =
+// { psName, subtype, fk }), which Acrobat uses where that font is installed, or uses
+// Helvetica Bold, which every reader has built in.
+const FIELD_FONT = 'NameFont'
 
-function embedSimpleFieldFont(lib, doc, bytes, fk) {
-  const { PDFName, PDFNumber } = lib
+function fieldFontDict(lib, doc, f) {
   const ctx = doc.context
-  const upm = fk.unitsPerEm
-  const s = 1000 / upm
-  const codeToUni = (c) => (c < 128 ? c : CP1250_HIGH[c - 128])
+  if (!f) return ctx.obj({ Type: 'Font', Subtype: 'Type1', BaseFont: 'Helvetica-Bold', Encoding: 'WinAnsiEncoding' })
+  const { PDFName, PDFNumber } = lib
+  const fk = f.fk
+  const s = 1000 / fk.unitsPerEm
+  const dec = new TextDecoder('windows-1252')
   const widths = []
-  const diffs = [128]
   for (let c = 32; c <= 255; c++) {
-    const u = codeToUni(c)
-    const has = u && fk.hasGlyphForCodePoint(u)
-    widths.push(has ? Math.round(fk.glyphForCodePoint(u).advanceWidth * s) : 0)
-    if (c >= 128) diffs.push(PDFName.of(u ? 'uni' + u.toString(16).toUpperCase().padStart(4, '0') : '.notdef'))
+    const u = dec.decode(new Uint8Array([c])).codePointAt(0)
+    widths.push(PDFNumber.of(fk.hasGlyphForCodePoint(u) ? Math.round(fk.glyphForCodePoint(u).advanceWidth * s) : 0))
   }
-  const isCff = bytes[0] === 0x4f && bytes[1] === 0x54 && bytes[2] === 0x54 && bytes[3] === 0x4f
-  const file = ctx.flateStream(bytes, isCff ? { Subtype: 'OpenType' } : { Length1: bytes.length })
-  const descriptor = ctx.obj({
-    Type: 'FontDescriptor',
-    FontName: FIELD_FONT,
-    Flags: 32,
+  const descriptor = ctx.register(ctx.obj({
+    Type: 'FontDescriptor', FontName: f.psName, Flags: 32, FontWeight: 700,
     FontBBox: [fk.bbox.minX, fk.bbox.minY, fk.bbox.maxX, fk.bbox.maxY].map((v) => Math.round(v * s)),
-    ItalicAngle: 0,
-    Ascent: Math.round(fk.ascent * s),
-    Descent: Math.round(fk.descent * s),
-    CapHeight: Math.round((fk.capHeight || fk.ascent * 0.7) * s),
-    StemV: 120,
-  })
-  descriptor.set(PDFName.of(isCff ? 'FontFile3' : 'FontFile2'), ctx.register(file))
-  // ToUnicode so copied/searched text is right
-  const bf = []
-  for (let c = 32; c <= 255; c++) {
-    const u = codeToUni(c)
-    if (u) bf.push(`<${c.toString(16).padStart(2, '0')}> <${u.toString(16).padStart(4, '0')}>`)
-  }
-  let cmap = '/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /Adobe-Identity-UCS def\n/CMapType 2 def\n1 begincodespacerange\n<00> <FF>\nendcodespacerange\n'
-  for (let i = 0; i < bf.length; i += 100) {
-    const chunk = bf.slice(i, i + 100)
-    cmap += `${chunk.length} beginbfchar\n${chunk.join('\n')}\nendbfchar\n`
-  }
-  cmap += 'endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n'
-  const font = ctx.obj({
-    Type: 'Font',
-    Subtype: isCff ? 'Type1' : 'TrueType',
-    BaseFont: FIELD_FONT,
-    FirstChar: 32,
-    LastChar: 255,
-    Widths: widths.map((w) => PDFNumber.of(w)),
-    Encoding: ctx.obj({ Type: 'Encoding', BaseEncoding: 'WinAnsiEncoding', Differences: diffs }),
-  })
-  font.set(PDFName.of('FontDescriptor'), ctx.register(descriptor))
-  font.set(PDFName.of('ToUnicode'), ctx.register(ctx.flateStream(cmap)))
-  return ctx.register(font)
+    ItalicAngle: 0, Ascent: Math.round(fk.ascent * s), Descent: Math.round(fk.descent * s),
+    CapHeight: Math.round((fk.capHeight || fk.ascent * 0.7) * s), StemV: 120,
+  }))
+  const dict = ctx.obj({ Type: 'Font', Subtype: f.subtype, BaseFont: f.psName, Encoding: 'WinAnsiEncoding', FirstChar: 32, LastChar: 255 })
+  dict.set(PDFName.of('Widths'), ctx.obj(widths))
+  dict.set(PDFName.of('FontDescriptor'), descriptor)
+  return dict
 }
 
-function addNameField(lib, doc, fontBytes, fk, field, H) {
+function addNameField(lib, doc, field, H) {
   const { PDFName, PDFString } = lib
   const ctx = doc.context
   const form = doc.getForm()
-  const fontRef = embedSimpleFieldFont(lib, doc, fontBytes, fk)
+  const fontRef = ctx.register(fieldFontDict(lib, doc, field.font))
   const tf = form.createTextField('name')
   tf.disableMultiline()
   tf.disableScrolling()
@@ -235,7 +203,7 @@ export async function buildPdf(pages, logos, fontBytes, fonts, meta = {}) {
       }
     }
   }
-  if (meta.field) addNameField(lib, doc, fontBytes.bold, fonts.bold, meta.field, H)
+  if (meta.field) addNameField(lib, doc, meta.field, H)
   // keep our own (empty) field appearance; pdf-lib would otherwise redraw it with Helvetica
   return doc.save({ updateFieldAppearances: false })
 }

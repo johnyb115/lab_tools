@@ -173,6 +173,14 @@
             <div class="cm-font" id="cm-font-bold-name"></div>
           </div>
           <p class="cm-note">An own font is used only in this tab and only for your PDF; it is not uploaded anywhere.</p>
+          <div class="field" style="margin-top:10px">
+            <label for="cm-fieldFont">Font of the fillable name field</label>
+            <select id="cm-fieldFont" data-key="fieldFont">
+              <option value="same">Certificate font (must be installed where the PDF is filled)</option>
+              <option value="helvetica">Helvetica (works on any computer)</option>
+            </select>
+          </div>
+          <p class="cm-note">Acrobat Reader types into form fields only with fonts installed on the computer. Use the certificate font if everyone filling the PDF has it (Vafle VUT on VUT computers), otherwise Helvetica.</p>
         </div>
 
         <div class="panel">
