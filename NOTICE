@@ -1,0 +1,15 @@
+Lab Tools (labtools.top)
+Source code: https://github.com/johnyb115/lab_tools
+
+The source code of this project is licensed under the GNU Affero General
+Public License v3.0, see LICENSE.
+
+Not covered by that license:
+
+- Fonts in web/src/assets/fonts:
+  - Geist is licensed under the SIL Open Font License 1.1 (see Geist-OFL.txt).
+  - Vafle VUT is the typeface of Brno University of Technology (VUT) and
+    remains its property. It is included only for VUT-related documents.
+- Third-party libraries installed through npm keep their own licenses.
+  Among them, the EPS converter in the Certificate Maker uses Ghostscript
+  (@okathira/ghostpdl-wasm), licensed under AGPL-3.0-or-later.
