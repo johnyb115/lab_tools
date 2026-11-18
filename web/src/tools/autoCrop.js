@@ -29,6 +29,12 @@ const paddingInput = document.getElementById('padding')
 
 const modePercentBtn = document.getElementById('mode-percent')
 const modePixelsBtn = document.getElementById('mode-pixels')
+const modeFitBtn = document.getElementById('mode-fit')
+const fitRow = document.getElementById('fit-row')
+const fitMax = document.getElementById('fit-max')
+const fitPresets = document.getElementById('fit-presets')
+const sizeRow = document.getElementById('size-row')
+const batchSummary = document.getElementById('batch-summary')
 const sizeW = document.getElementById('size-w')
 const sizeH = document.getElementById('size-h')
 const sizeWLabel = document.getElementById('size-w-label')
@@ -59,7 +65,7 @@ const resultsArea = document.getElementById('results-area')
 let entries = []
 let nextId = 1
 
-let mode = 'percent'   // 'percent' | 'pixels'
+let mode = 'percent'   // 'percent' | 'pixels' | 'fit'
 let lock = true
 let driver = 'w'       // which size field the user last typed in
 
@@ -344,7 +350,16 @@ function targetSize(srcW, srcH) {
   let tw = srcW
   let th = srcH
 
-  if (mode === 'percent') {
+  if (mode === 'fit') {
+    // Only ever shrinks: images already within the limit are left alone, so
+    // a batch of very differently sized images can share one setting.
+    const max = parseFloat(fitMax.value)
+    const long = Math.max(srcW, srcH)
+    if (isPos(max) && long > max) {
+      tw = (srcW * max) / long
+      th = (srcH * max) / long
+    }
+  } else if (mode === 'percent') {
     let px = isPos(w) ? w : 100
     let py = isPos(h) ? h : 100
     if (lock) { const p = driver === 'h' ? py : px; px = p; py = p }
@@ -458,6 +473,7 @@ function renderResults() {
   if (entries.length === 0) {
     resultsArea.innerHTML = '<div class="empty-state">Upload one or more images to crop or resize them.</div>'
     downloadZipBtn.disabled = true
+    updateSummary()
     return
   }
 
@@ -524,11 +540,34 @@ function renderResults() {
   })
 
   downloadZipBtn.disabled = !entries.some((e) => e.outCanvas)
+  updateSummary()
 }
 
 function showEncodedSize(entry, blob) {
   const cell = resultsArea.querySelector(`[data-entry-id="${entry.id}"] [data-role="new-size"]`)
   if (cell) cell.textContent = `${formatBytes(blob.size)} ${formatLabel(outFormat.value)}`
+  updateSummary()
+}
+
+function updateSummary() {
+  const withOutput = entries.filter((e) => e.outCanvas)
+  if (entries.length < 2 || withOutput.length === 0) {
+    batchSummary.hidden = true
+    return
+  }
+  batchSummary.hidden = false
+  const before = withOutput.reduce((s, e) => s + e.file.size, 0)
+  const pending = withOutput.filter((e) => !e.outBlob)
+  const label = `<strong>${withOutput.length} images</strong>`
+  if (pending.length) {
+    const large = pending.some((e) => e.outCanvas.width * e.outCanvas.height > AUTO_ENCODE_MAX_PX)
+    batchSummary.innerHTML = `${label}<span class="ac-fmt">${formatBytes(before)} → ${large ? 'some sizes measured on download' : 'measuring…'}</span>`
+    return
+  }
+  const after = withOutput.reduce((s, e) => s + e.outBlob.size, 0)
+  const pct = before > 0 ? Math.round((1 - after / before) * 100) : 0
+  const change = pct >= 0 ? `${pct}% smaller` : `${-pct}% larger`
+  batchSummary.innerHTML = `${label}<span>${formatBytes(before)} → <strong>${formatBytes(after)}</strong> <span class="ac-fmt">(${change})</span></span>`
 }
 
 downloadZipBtn.addEventListener('click', async () => {
@@ -542,7 +581,9 @@ downloadZipBtn.addEventListener('click', async () => {
     const zip = new JSZip()
     for (const e of ready) {
       const blob = await encodeEntry(e)
-      if (blob) zip.file(outputName(e), blob)
+      if (!blob) continue
+      zip.file(outputName(e), blob)
+      showEncodedSize(e, blob)
     }
     const zipBlob = await zip.generateAsync({ type: 'blob' })
     downloadBlob(zipBlob, 'images.zip')
@@ -564,7 +605,7 @@ function refSize() {
 // panel reads like the Windows dialog. In pixel mode this uses the first
 // image's ratio; each image still keeps its own ratio when resized.
 function syncLinkedField() {
-  if (!lock) return
+  if (!lock || mode === 'fit') return
   if (mode === 'percent') {
     if (driver === 'w') sizeH.value = sizeW.value
     else sizeW.value = sizeH.value
@@ -586,7 +627,9 @@ function prefillPixelsFromFirst() {
 }
 
 function updateSizeHint() {
-  if (mode === 'percent') {
+  if (mode === 'fit') {
+    sizeHint.textContent = 'Larger images are scaled down to fit; smaller ones are left as they are. For a full-width figure in Word, about 2000 px prints sharp, 1000 px is enough on screen.'
+  } else if (mode === 'percent') {
     sizeHint.textContent = 'Applied after cropping. 100% keeps the original size.'
   } else if (lock) {
     sizeHint.textContent = entries.length > 1
@@ -607,7 +650,7 @@ function setMode(next) {
   if (mode === 'pixels') {
     sizeW.value = t ? t.w : ''
     sizeH.value = t ? t.h : ''
-  } else {
+  } else if (mode === 'percent') {
     sizeW.value = t ? +((t.w / ref.w) * 100).toFixed(2) : 100
     sizeH.value = t ? +((t.h / ref.h) * 100).toFixed(2) : 100
   }
@@ -615,10 +658,12 @@ function setMode(next) {
   const unit = mode === 'percent' ? '%' : 'px'
   sizeWLabel.textContent = `Width (${unit})`
   sizeHLabel.textContent = `Height (${unit})`
-  modePercentBtn.classList.toggle('is-active', mode === 'percent')
-  modePercentBtn.setAttribute('aria-pressed', String(mode === 'percent'))
-  modePixelsBtn.classList.toggle('is-active', mode === 'pixels')
-  modePixelsBtn.setAttribute('aria-pressed', String(mode === 'pixels'))
+  for (const [btn, m] of [[modePercentBtn, 'percent'], [modePixelsBtn, 'pixels'], [modeFitBtn, 'fit']]) {
+    btn.classList.toggle('is-active', mode === m)
+    btn.setAttribute('aria-pressed', String(mode === m))
+  }
+  sizeRow.hidden = mode === 'fit'
+  fitRow.hidden = mode !== 'fit'
   percentPresets.hidden = mode !== 'percent'
   updateSizeHint()
   resizeAll()
@@ -626,6 +671,15 @@ function setMode(next) {
 
 modePercentBtn.addEventListener('click', () => setMode('percent'))
 modePixelsBtn.addEventListener('click', () => setMode('pixels'))
+modeFitBtn.addEventListener('click', () => setMode('fit'))
+
+fitMax.addEventListener('input', scheduleResize)
+fitPresets.querySelectorAll('[data-fit]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    fitMax.value = btn.dataset.fit
+    resizeAll()
+  })
+})
 
 sizeW.addEventListener('input', () => { driver = 'w'; syncLinkedField(); scheduleResize() })
 sizeH.addEventListener('input', () => { driver = 'h'; syncLinkedField(); scheduleResize() })

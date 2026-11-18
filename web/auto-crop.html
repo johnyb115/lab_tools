@@ -58,7 +58,21 @@
     .ac-stats dt { color: var(--text-dim); }
     .ac-stats dd { margin: 0; text-align: right; }
     .ac-stats .ac-fmt { color: var(--text-dim); }
-    .ac-stats .ac-saved { grid-column: 1 / -1; color: var(--text-dim); font-size: 0.78rem; }
+    .ac-summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding: 0.6rem 0.9rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-elev);
+      font-size: 0.88rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .ac-summary strong { font-weight: 600; }
+    .ac-summary .ac-fmt { color: var(--text-dim); }
   </style>
 </head>
 <body>
@@ -128,11 +142,25 @@
         <div class="panel">
           <h2>Resize</h2>
           <div class="btn-row">
-            <button type="button" class="btn is-active" id="mode-percent" aria-pressed="true">Percentage</button>
+            <button type="button" class="btn is-active" id="mode-percent" aria-pressed="true">Percent</button>
             <button type="button" class="btn" id="mode-pixels" aria-pressed="false">Pixels</button>
+            <button type="button" class="btn" id="mode-fit" aria-pressed="false">Max size</button>
           </div>
 
-          <div class="ac-size-row">
+          <div id="fit-row" hidden>
+            <div class="field" style="margin-top: 0.8rem;">
+              <label for="fit-max">Longest side at most (px)</label>
+              <input id="fit-max" type="number" min="1" step="1" value="2000" />
+            </div>
+            <div class="ac-presets" id="fit-presets">
+              <button type="button" class="btn" data-fit="3000">3000</button>
+              <button type="button" class="btn" data-fit="2000">2000</button>
+              <button type="button" class="btn" data-fit="1400">1400</button>
+              <button type="button" class="btn" data-fit="1000">1000</button>
+            </div>
+          </div>
+
+          <div class="ac-size-row" id="size-row">
             <div class="field">
               <label for="size-w" id="size-w-label">Width (%)</label>
               <input id="size-w" type="number" min="1" step="any" value="100" />
@@ -184,6 +212,7 @@
 
       <section>
         <div id="global-alerts"></div>
+        <div id="batch-summary" class="ac-summary" hidden></div>
         <div id="results-area">
           <div class="empty-state">Upload one or more images to crop or resize them.</div>
         </div>
