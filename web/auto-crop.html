@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image Auto-Crop — Lab Tools</title>
+  <title>Image Crop &amp; Resize — Lab Tools</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/src/style.css" />
   <script>(function(){var t=localStorage.getItem("lab-tools-theme");if(!t)t=matchMedia("(prefers-color-scheme:light)").matches?"light":"dark";document.documentElement.dataset.theme=t})()</script>
   <style>
     .bg-swatch-hint { font-size: 0.78rem; color: var(--text-dim); margin: 0.3rem 0 0; }
-    .dim-caption { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.35rem; }
+    .dim-caption { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.35rem; font-variant-numeric: tabular-nums; }
     .ac-remove-btn {
       flex: 0 0 auto;
       background: none;
@@ -23,6 +23,42 @@
     .ac-remove-btn:hover { text-decoration: underline; }
     .ac-result-card { margin-bottom: 1.25rem; }
     .ac-result-card h3 { font-size: 1rem; margin-bottom: 0.6rem; word-break: break-all; }
+
+    .ac-size-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0.5rem;
+      align-items: end;
+      margin-top: 0.8rem;
+    }
+    .ac-size-row .field { margin-bottom: 0; }
+    .ac-lock {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ac-lock svg { width: 16px; height: 16px; }
+    .ac-presets { display: flex; gap: 0.35rem; margin-top: 0.6rem; }
+    .ac-presets .btn { flex: 1; padding: 0.35rem 0; font-size: 0.8rem; }
+    .ac-size-hint { font-size: 0.78rem; color: var(--text-dim); margin: 0.5rem 0 0; }
+
+    .ac-stats {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.2rem 1rem;
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+      margin-top: 0.75rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--border);
+    }
+    .ac-stats dt { color: var(--text-dim); }
+    .ac-stats dd { margin: 0; text-align: right; }
+    .ac-stats .ac-fmt { color: var(--text-dim); }
+    .ac-stats .ac-saved { grid-column: 1 / -1; color: var(--text-dim); font-size: 0.78rem; }
   </style>
 </head>
 <body>
@@ -30,11 +66,11 @@
 
   <main class="site-main">
     <div class="page-header">
-      <h1>Image Auto-Crop</h1>
+      <h1>Image Crop &amp; Resize</h1>
       <p>
-        Automatically trims uniform white-space (or other flat-color) margins around one or
-        more uploaded images. Everything runs locally in your browser using the Canvas 2D API
-        — nothing is uploaded anywhere.
+        Trim uniform white (or other flat-colour) margins, scale huge images down by percentage
+        or to exact pixel dimensions, and re-save as PNG, JPEG or WebP. Works on several images
+        at once. Everything runs locally in your browser — nothing is uploaded anywhere.
       </p>
     </div>
 
@@ -53,39 +89,95 @@
         </div>
 
         <div class="panel">
-          <h2>Background &amp; tolerance</h2>
+          <h2>Crop</h2>
           <label class="checkbox-row">
-            <input type="checkbox" id="custom-bg-checkbox" />
-            Use one color for all images
+            <input type="checkbox" id="crop-enabled" checked />
+            Trim uniform margins
           </label>
-          <div class="field" id="custom-bg-field" hidden>
-            <label for="bg-color">Background color</label>
-            <input id="bg-color" type="color" value="#ffffff" />
-          </div>
-          <p class="bg-swatch-hint" id="auto-bg-hint">
-            Each image auto-detects its own background from its corners.
-          </p>
 
-          <div class="field">
-            <label for="tolerance">Tolerance</label>
-            <input id="tolerance" type="range" min="0" max="100" value="10" />
-            <div class="range-readout">
-              <span>0</span>
-              <span id="tolerance-value">10</span>
-              <span>100</span>
+          <div id="crop-options">
+            <label class="checkbox-row">
+              <input type="checkbox" id="custom-bg-checkbox" />
+              Use one color for all images
+            </label>
+            <div class="field" id="custom-bg-field" hidden>
+              <label for="bg-color">Background color</label>
+              <input id="bg-color" type="color" value="#ffffff" />
+            </div>
+            <p class="bg-swatch-hint" id="auto-bg-hint">
+              Each image auto-detects its own background from its corners.
+            </p>
+
+            <div class="field">
+              <label for="tolerance">Tolerance</label>
+              <input id="tolerance" type="range" min="0" max="100" value="10" />
+              <div class="range-readout">
+                <span>0</span>
+                <span id="tolerance-value">10</span>
+                <span>100</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="padding">Padding (px)</label>
+              <input id="padding" type="number" min="0" value="0" step="1" />
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Resize</h2>
+          <div class="btn-row">
+            <button type="button" class="btn is-active" id="mode-percent" aria-pressed="true">Percentage</button>
+            <button type="button" class="btn" id="mode-pixels" aria-pressed="false">Pixels</button>
+          </div>
+
+          <div class="ac-size-row">
+            <div class="field">
+              <label for="size-w" id="size-w-label">Width (%)</label>
+              <input id="size-w" type="number" min="1" step="any" value="100" />
+            </div>
+            <button type="button" class="btn ac-lock is-active" id="lock-aspect" aria-pressed="true" title="Keep aspect ratio">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </button>
+            <div class="field">
+              <label for="size-h" id="size-h-label">Height (%)</label>
+              <input id="size-h" type="number" min="1" step="any" value="100" />
             </div>
           </div>
 
-          <div class="field">
-            <label for="padding">Padding (px)</label>
-            <input id="padding" type="number" min="0" value="0" step="1" />
+          <div class="ac-presets" id="percent-presets">
+            <button type="button" class="btn" data-pct="50">50%</button>
+            <button type="button" class="btn" data-pct="25">25%</button>
+            <button type="button" class="btn" data-pct="20">20%</button>
+            <button type="button" class="btn" data-pct="10">10%</button>
           </div>
+          <p class="ac-size-hint" id="size-hint">Applied after cropping. 100% keeps the original size.</p>
+        </div>
 
-          <div class="btn-row">
-            <button id="crop-all-btn" class="btn btn-primary" disabled>Crop All</button>
+        <div class="panel">
+          <h2>Output</h2>
+          <div class="field">
+            <label for="out-format">File type</label>
+            <select id="out-format">
+              <option value="image/png">PNG (lossless)</option>
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/webp">WebP</option>
+            </select>
           </div>
-          <div class="btn-row" style="margin-top: 0.5rem;">
-            <button id="download-zip-btn" class="btn" disabled>↓ Download All (ZIP)</button>
+          <div class="field" id="quality-field" hidden>
+            <label for="out-quality">Quality</label>
+            <input id="out-quality" type="range" min="10" max="100" value="92" />
+            <div class="range-readout">
+              <span>smaller</span>
+              <span id="out-quality-value">92%</span>
+              <span>better</span>
+            </div>
+          </div>
+          <p class="bg-swatch-hint" id="jpeg-hint" hidden>JPEG has no transparency — transparent areas are filled with white.</p>
+
+          <div class="btn-row" style="margin-top: 0.8rem;">
+            <button id="download-zip-btn" class="btn btn-primary" disabled>Download all (ZIP)</button>
           </div>
         </div>
       </aside>
@@ -93,7 +185,7 @@
       <section>
         <div id="global-alerts"></div>
         <div id="results-area">
-          <div class="empty-state">Upload one or more images to auto-crop their margins.</div>
+          <div class="empty-state">Upload one or more images to crop or resize them.</div>
         </div>
       </section>
     </div>

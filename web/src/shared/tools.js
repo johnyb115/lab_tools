@@ -116,10 +116,10 @@ export const CATEGORIES = [
         keywords: 'plot digitizer extract data points image graph screenshot',
       },
       {
-        id: 'auto-crop', code: 'CRP', label: 'Image Auto-Crop', href: './auto-crop.html', glyph: 'crop',
-        summary: 'Trim white margins off an image',
-        formats: 'PNG · JPG',
-        keywords: 'auto crop trim whitespace margin image',
+        id: 'auto-crop', code: 'CRP', label: 'Image Crop & Resize', href: './auto-crop.html', glyph: 'crop',
+        summary: 'Trim white margins and scale big images down',
+        formats: 'PNG · JPG · WebP',
+        keywords: 'auto crop trim whitespace margin image resize scale downscale shrink compress file size percentage pixels jpeg webp',
       },
       {
         id: 'background-remover', code: 'BG', label: 'Background Remover', href: './background-remover.html', glyph: 'cutout',

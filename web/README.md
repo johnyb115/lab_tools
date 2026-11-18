@@ -15,7 +15,7 @@ leaves the machine it was opened on.
 | Plot Digitizer | `plot-digitizer.html` | Click-calibrated axes + color-based curve extraction from a graph image |
 | Four-Point Probe | `four-point-probe.html` | Ports `lab_app/pages/02_FourPointProbe.py` — sheet resistance + Ossila rectangular correction |
 | Linspace Generator | `linspace.html` | Ports `lab_app/pages/01_Linspace_Generator.py` |
-| Image Auto-Crop | `auto-crop.html` | Trims uniform background margins around an image |
+| Image Crop & Resize | `auto-crop.html` | Trims uniform background margins, resizes by % or pixels, re-saves as PNG/JPEG/WebP |
 | Background Remover | `background-remover.html` | In-browser background removal via `@imgly/background-removal` (WASM) |
 | Word → High-Quality PDF | `word-to-pdf.html` | Renders a `.docx` via `mammoth` (original image bytes, no recompression) and prints it through the browser's own PDF engine |
 | EIS Plotter | `eis-plotter.html` | Nyquist + Bode plots from impedance data (Re/Im or Mag/Phase input), multi-file overlay |
